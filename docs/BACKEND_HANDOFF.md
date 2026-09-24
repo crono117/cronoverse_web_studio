@@ -1,5 +1,12 @@
 # Backend handoff
 
+> **Update:** the landing page now submits to a Django REST Framework API
+> (`backend/`), managed through Jazzmin admin, instead of the route described
+> below. See the root [README's Backend section](../README.md#backend) for
+> current setup and API docs. This file is kept for the D1 route's history
+> and request contract, which still exists in the repo but is no longer
+> called by the frontend.
+
 ## Baseline
 
 Preserve the approved frontend, English/Spanish behavior, and navy-ring Saturn-eye

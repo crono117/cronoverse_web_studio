@@ -12,6 +12,9 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // The Django backend is a separate Python project (including its own
+    // vendored static JS under .venv/); never lint it as frontend code.
+    "backend/**",
   ]),
   {
     files: ["components/ui/**/*.{ts,tsx}", "hooks/use-mobile.ts"],
@@ -21,6 +24,17 @@ const eslintConfig = defineConfig([
       "@typescript-eslint/no-unused-vars": "off",
       "react-hooks/purity": "off",
       "react-hooks/set-state-in-effect": "off",
+    },
+  },
+  {
+    files: ["lib/cronoverse-fumes.ts", "components/hero-scenes.tsx"],
+    rules: {
+      // Framework-free canvas engine (intentionally @ts-nocheck; see file header)
+      // plus its thin React wrapper. The engine returns cleanup functions with
+      // extra methods attached (setPalette, setScene, stop), which `any` models
+      // more honestly than a speculative interface would.
+      "@typescript-eslint/ban-ts-comment": "off",
+      "@typescript-eslint/no-explicit-any": "off",
     },
   },
 ]);
