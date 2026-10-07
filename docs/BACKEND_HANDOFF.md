@@ -63,3 +63,12 @@ Mailjet, a working `info` mailbox or alias for replies, a running email worker,
 and the Site's backend runtime configuration. Keep all credentials and inquiry
 records out of Git. Run checks/builds, then test both messages using the owner's
 own email address before inviting real submissions.
+
+## Google Analytics
+
+The frontend and Django admin now support GA4 visitor reporting. See
+[GOOGLE_ANALYTICS.md](GOOGLE_ANALYTICS.md). Activate website tracking with
+`GA4_MEASUREMENT_ID`; activate the staff dashboard with numeric
+`GA4_PROPERTY_ID` and a private reporting credential granted Viewer access.
+Neither mail nor analytics credentials are committed. The published frontend
+analytics integration remains inactive until its Measurement ID is configured.

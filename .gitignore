@@ -61,3 +61,8 @@ __pycache__/
 /backend/staticfiles/
 /backend/db.sqlite3*
 /backend/.pytest_cache/
+
+# Keep private Google reporting keys outside the checkout.
+**/secrets/
+*service-account*.json
+*credentials*.json

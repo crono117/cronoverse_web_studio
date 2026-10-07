@@ -6,3 +6,4 @@ psycopg[binary]>=3.2,<4
 python-dotenv>=1.0,<2
 gunicorn>=23,<24
 whitenoise>=6.9,<7
+google-analytics-data>=0.18,<1

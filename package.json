@@ -14,7 +14,8 @@
     "db:generate": "drizzle-kit generate",
     "typecheck": "tsc --noEmit --incremental false",
     "db:migrate:local": "node --import ./scripts/sites-env.mjs ./node_modules/wrangler/bin/wrangler.js d1 migrations apply DB --config wrangler.local.jsonc --local --persist-to .wrangler/state",
-    "test:inquiries": "node --experimental-strip-types --test tests/inquiry-proxy.test.mjs"
+    "test:inquiries": "node --experimental-strip-types --test tests/inquiry-proxy.test.mjs",
+    "test:analytics": "node --experimental-strip-types --test tests/analytics.test.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",

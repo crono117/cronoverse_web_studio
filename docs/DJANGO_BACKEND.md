@@ -125,6 +125,15 @@ requested service, preferred language, project message, and an admin link. Reply
 to the owner's notification addresses the visitor. Internal staff notes never
 appear in these messages.
 
+## Website analytics in admin
+
+The Jazzmin sidebar includes **Website analytics** at `/admin/analytics/`.
+It reads GA4 reports using Google's official Data API client with read-only
+authorization. See [GOOGLE_ANALYTICS.md](GOOGLE_ANALYTICS.md) for the frontend
+Measurement ID, numeric reporting Property ID, server credential, and optional
+Compose secret mount. Missing reporting configuration does not stop inquiry
+storage or email delivery.
+
 ## Admin and delivery controls
 
 `/admin/` uses Django staff authentication and its normal session/CSRF protection.

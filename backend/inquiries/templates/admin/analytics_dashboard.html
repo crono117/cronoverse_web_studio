@@ -1,0 +1,62 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block extrastyle %}{{ block.super }}<link rel="stylesheet" href="{% static 'inquiries/analytics-dashboard.css' %}">{% endblock %}
+
+{% block content %}
+<div class="analytics-dashboard">
+  <div class="analytics-heading">
+    <div><p class="analytics-eyebrow">CRONOVERSE / GOOGLE ANALYTICS</p><h1>Website analytics</h1></div>
+    <form method="get" class="analytics-range">
+      <label for="analytics-days">Reporting period</label>
+      <select id="analytics-days" name="days">{% for range in ranges %}<option value="{{ range }}" {% if range == days %}selected{% endif %}>Last {{ range }} days</option>{% endfor %}</select>
+      <button type="submit">Refresh report</button>
+    </form>
+  </div>
+
+  {% if report.state == 'setup' %}
+    <section class="analytics-panel analytics-setup">
+      <h2>Connect your Google Analytics property</h2>
+      <p>This dashboard reads your website's GA4 reports. No reporting account is connected yet.</p>
+      <ol>
+        <li>Add your site's Measurement ID to enable visitor tracking.</li>
+        <li>Enable the Google Analytics Data API and give your reporting service account Viewer access to the same GA4 property.</li>
+        <li>Configure the numeric GA4 Property ID and reporting credential on the Django server.</li>
+      </ol>
+      <p>The setup guide is in the project's <strong>docs/GOOGLE_ANALYTICS.md</strong>. Keep the reporting credential on the server.</p>
+    </section>
+  {% elif report.state == 'error' %}
+    <section class="analytics-panel analytics-error" role="alert"><h2>Reports could not be loaded</h2><p>{{ report.message }}</p></section>
+  {% else %}
+    <p class="analytics-meta">{{ report.start_date|date:"M j, Y" }} – {{ report.end_date|date:"M j, Y" }} · {{ report.property_timezone }} · Retrieved {{ report.updated_at|date:"M j, Y, g:i:s A T" }}</p>
+    <div class="analytics-metrics">
+      <article><span>Active users</span><strong>{{ report.users }}</strong><small>Selected reporting period</small></article>
+      <article><span>Sessions</span><strong>{{ report.sessions }}</strong><small>Visits to the website</small></article>
+      <article><span>Page views</span><strong>{{ report.views }}</strong><small>Includes repeat views</small></article>
+      <article><span>Inquiry submissions</span><strong>{{ report.leads }}</strong><small>Google's generate_lead events</small></article>
+      <article class="analytics-realtime"><span>Recent active users</span><strong>{% if report.realtime_users is not None %}{{ report.realtime_users }}{% else %}—{% endif %}</strong><small>Last 30 minutes{% if report.realtime_unavailable %} · Temporarily unavailable{% endif %}</small></article>
+    </div>
+    {% if report.users == 0 and report.views == 0 %}<p class="analytics-empty">Google returned no visitor activity for this reporting period.</p>{% endif %}
+
+    <section class="analytics-panel">
+      <div class="analytics-panel-heading"><h2>Daily active users</h2><span>Peak: {{ report.chart_max }}</span></div>
+      <svg class="analytics-chart" viewBox="0 0 900 220" role="img" aria-labelledby="analytics-chart-title">
+        <title id="analytics-chart-title">Daily active users for the last {{ days }} days. A table of the same values follows.</title>
+        <line x1="20" y1="30" x2="880" y2="30" class="analytics-gridline"/>
+        <line x1="20" y1="110" x2="880" y2="110" class="analytics-gridline"/>
+        <line x1="20" y1="190" x2="880" y2="190" class="analytics-gridline"/>
+        <polyline points="{{ report.chart_points }}" fill="none" class="analytics-chart-line"/>
+      </svg>
+      <div class="analytics-chart-dates"><span>{{ report.start_date|date:"M j" }}</span><span>{{ report.end_date|date:"M j" }}</span></div>
+      <details class="analytics-daily"><summary>View daily totals</summary><div class="analytics-table-wrap"><table><thead><tr><th scope="col">Date</th><th scope="col">Active users</th><th scope="col">Page views</th></tr></thead><tbody>{% for row in report.daily %}<tr><th scope="row">{{ row.date|date:"M j, Y" }}</th><td>{{ row.users }}</td><td>{{ row.views }}</td></tr>{% endfor %}</tbody></table></div></details>
+    </section>
+
+    <div class="analytics-breakdowns">
+      <section class="analytics-panel"><h2>Top traffic sources</h2><p class="analytics-help">Source / medium, ranked by sessions</p><div class="analytics-table-wrap"><table><thead><tr><th scope="col">Source</th><th scope="col">Sessions</th></tr></thead><tbody>{% for row in report.sources %}<tr><th scope="row">{{ row.label }}</th><td>{{ row.value }}</td></tr>{% empty %}<tr><td colspan="2">No source data for this period.</td></tr>{% endfor %}</tbody></table></div></section>
+      <section class="analytics-panel"><h2>Visitor devices</h2><p class="analytics-help">Active users by device category</p>{% for row in report.devices %}<div class="analytics-device"><div><span>{{ row.label }}</span><strong>{{ row.value }}</strong></div><div class="analytics-bar"><span style="width: {{ row.width }}%"></span></div></div>{% empty %}<p>No device data for this period.</p>{% endfor %}</section>
+    </div>
+    <p class="analytics-help">Reports are cached for 60 seconds. Google may take time to process historical data; today's totals can change. Analytics counts visitors who allow tracking, and inquiry events can be fewer than records in the inquiry inbox.</p>
+    {% if report.thresholded %}<p class="analytics-help">Google applied privacy thresholds to part of this report.</p>{% endif %}
+  {% endif %}
+</div>
+{% endblock %}

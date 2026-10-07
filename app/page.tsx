@@ -7,6 +7,7 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@
 
 import { DustSurface } from "@/components/dust-surface";
 import { CapabilityShowcase } from "@/components/capability-showcase";
+import { trackInquirySuccess } from "@/lib/analytics";
 
 type Language = "en" | "es";
 const copy = {
@@ -61,6 +62,7 @@ export default function Home(){
   try{
    const r=await fetch("/api/inquiries",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({id:requestId.current,...payload})});
    setStatus(r.ok?"success":r.status===429?"rate":"error");
+   if(r.ok&&!String(data.get("website")||"").trim())trackInquirySuccess(requestId.current,service||"unsure",lang);
   }catch{setStatus("error");}
  }
 

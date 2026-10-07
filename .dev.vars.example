@@ -2,3 +2,6 @@
 INQUIRY_BACKEND_URL=http://127.0.0.1:8000
 # Must match backend/.env; use a long random value in production.
 INQUIRY_API_KEY=local-development-only-key
+
+# Public GA4 web-stream Measurement ID (G-...). Empty disables analytics.
+GA4_MEASUREMENT_ID=

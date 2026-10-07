@@ -6,3 +6,8 @@ __pycache__
 data
 staticfiles
 db.sqlite3*
+
+# Keep private Google reporting keys outside the checkout.
+**/secrets/
+*service-account*.json
+*credentials*.json

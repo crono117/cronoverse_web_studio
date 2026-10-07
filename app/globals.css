@@ -224,3 +224,15 @@ html[lang=es] .hero h1{font-size:clamp(52px,5.7vw,84px);letter-spacing:-3px}
   .site-header .wordmark { font-size:20px; }
   .header-actions { gap:10px; }
 }
+
+/* Analytics preferences follow the site's navy and electric-blue palette. */
+.analytics-settings { background: var(--ink); color: #d5deed; padding: 0 0 22px; }
+.analytics-settings .wrap { display: flex; justify-content: flex-end; }
+.analytics-settings button { border: 0; padding: 4px 0; background: none; color: inherit; font: inherit; font-size: .875rem; text-decoration: underline; text-underline-offset: 3px; }
+.analytics-banner { position: fixed; z-index: 100; inset: auto 24px 24px auto; width: min(420px, calc(100% - 48px)); padding: 24px; background: #142239; color: #f6f8fc; border: 1px solid #526986; border-radius: 4px; box-shadow: 0 8px 32px #0006; }
+.analytics-banner h2 { font-size: 1.125rem; letter-spacing: 0; line-height: 1.5; }
+.analytics-banner p { margin: 10px 0 20px; font-size: 1rem; color: #d5deed; }
+.analytics-actions { display: flex; flex-wrap: wrap; gap: 12px; }
+.analytics-actions button { flex: 1; min-height: 44px; padding: 10px 16px; border: 1px solid #62c5ff; border-radius: 3px; background: transparent; color: #f6f8fc; font: inherit; font-size: .875rem; }
+.analytics-actions button:first-child { background: #62c5ff; color: #0d1628; }
+@media (max-width: 480px) { .analytics-banner { inset: auto 12px 12px 12px; width: auto; padding: 20px; } }

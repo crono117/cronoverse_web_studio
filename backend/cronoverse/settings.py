@@ -30,6 +30,8 @@ INQUIRY_MAX_PER_HOUR = 3
 PUBLIC_BASE_URL = os.getenv("DJANGO_PUBLIC_BASE_URL", "http://127.0.0.1:8000" if DEBUG else "").rstrip("/")
 STUDIO_URL = os.getenv("STUDIO_URL", "https://cronoverse.online").rstrip("/")
 INQUIRY_NOTIFICATION_EMAIL = os.getenv("INQUIRY_NOTIFICATION_EMAIL", "").strip()
+GA4_PROPERTY_ID = os.getenv("GA4_PROPERTY_ID", "").strip()
+GA4_CREDENTIALS_FILE = os.getenv("GOOGLE_APPLICATION_CREDENTIALS", "").strip()
 
 EMAIL_BACKEND = os.getenv(
     "EMAIL_BACKEND",
@@ -79,7 +81,7 @@ if not DEBUG:
 
 INSTALLED_APPS = [
     "jazzmin",
-    "django.contrib.admin",
+    "cronoverse.apps.CronoverseAdminConfig",
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
@@ -153,6 +155,12 @@ JAZZMIN_SETTINGS = {
     "site_brand": "Cronoverse",
     "welcome_sign": "Manage project inquiries",
     "icons": {"inquiries.Inquiry": "fas fa-address-card", "inquiries.EmailDelivery": "fas fa-envelope"},
+    "custom_links": {"inquiries": [{
+        "name": "Website analytics",
+        "url": "admin:analytics",
+        "icon": "fas fa-chart-line",
+        "permissions": ["inquiries.view_inquiry"],
+    }]},
 }
 LOGGING = {
     "version": 1,

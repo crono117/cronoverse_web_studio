@@ -11,6 +11,7 @@ Django project-inquiry backend with SMTP emails and an admin inbox.
 - Approved Saturn-eye icon: blue planet, red iris, dark navy ring.
 - Interactive inventory, landing page, business profile, order grid, and charts.
 - Inquiry form with Django storage, English/Spanish welcome emails, owner notifications, and Django/Jazzmin admin.
+- GA4 visitor/inquiry tracking and a protected Google Analytics dashboard in Django admin.
 
 The carousel uses sample data and component state. It does not create real
 products, orders, sales, or appointments.
@@ -53,6 +54,7 @@ committed. The managed `install:ci` helper is not needed for a normal local clon
 
 ```sh
 corepack pnpm test:inquiries
+corepack pnpm test:analytics
 corepack pnpm typecheck
 corepack pnpm build
 corepack pnpm start
@@ -77,6 +79,15 @@ Read [the Django setup and deployment guide](docs/DJANGO_BACKEND.md). Live email
 activation requires a Python host, Mailjet API/Secret keys in server secret
 storage, sender/domain verification in Mailjet, a working `info` mailbox or alias
 for replies, and the frontend's backend runtime settings.
+
+## Website analytics
+
+GA4 tracks consenting visitors and accepted inquiries. Set the public runtime
+`GA4_MEASUREMENT_ID` on the frontend to activate it. The **Website analytics**
+page in Django admin shows Google-reported active users, sessions, page views,
+inquiry events, daily trends, traffic sources, devices, and recent activity.
+It requires the numeric `GA4_PROPERTY_ID` and a server-only reporting credential
+with Viewer access. See [Google Analytics setup](docs/GOOGLE_ANALYTICS.md).
 
 ## Source map
 
