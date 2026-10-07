@@ -51,26 +51,73 @@ Local Worker settings belong in `.dev.vars`; backend settings belong in
 Do not put it in a `NEXT_PUBLIC_*` or `VITE_*` variable. Copying `.env.example`
 alone does not configure Wrangler's local Worker bindings.
 
-## SMTP and owner mailbox
+## Mailjet SMTP and owner mailbox
 
 Configure these in the backend environment before sending real mail:
 
 | Setting | Purpose |
 | --- | --- |
 | `EMAIL_BACKEND` | Set `django.core.mail.backends.smtp.EmailBackend` |
-| `EMAIL_HOST`, `EMAIL_PORT` | Your provider's SMTP endpoint and port |
-| `EMAIL_HOST_USER`, `EMAIL_HOST_PASSWORD` | SMTP credentials, supplied through secret storage |
-| `EMAIL_USE_TLS`, `EMAIL_USE_SSL` | STARTTLS is normally TLS=1/SSL=0; implicit TLS is TLS=0/SSL=1. Use your provider's settings. |
-| `DEFAULT_FROM_EMAIL` | Approved sender, such as `Cronoverse Web Studio <your-sender@example.com>` |
-| `INQUIRY_NOTIFICATION_EMAIL` | the owner's exact mailbox for new-inquiry alerts |
-| `INQUIRY_REPLY_TO_EMAIL` | Address customers reach when replying to the welcome message |
+| `EMAIL_HOST`, `EMAIL_PORT` | `in-v3.mailjet.com`, port `587` |
+| `EMAIL_HOST_USER` | Mailjet API Key (SMTP username), supplied through secret storage |
+| `EMAIL_HOST_PASSWORD` | Mailjet Secret Key (SMTP password), supplied through secret storage |
+| `EMAIL_USE_TLS`, `EMAIL_USE_SSL` | `1`, `0` for STARTTLS on port 587 |
+| `DEFAULT_FROM_EMAIL` | `Cronoverse Web Studio <info@cronoverse.online>` for both outgoing messages |
+| `INQUIRY_NOTIFICATION_EMAIL` | `lh@cronoverse.online` for new-inquiry alerts |
+| `INQUIRY_REPLY_TO_EMAIL` | `info@cronoverse.online` for replies to the welcome message |
 | `STUDIO_URL` | Public frontend origin used in welcome emails |
 | `DJANGO_PUBLIC_BASE_URL` | Public HTTPS backend origin used in the owner email's admin link |
 
-All example mailboxes are placeholders. No real sender or recipient has been
-selected. Use the SMTP provider's app password or SMTP credential where required,
-and configure its verified sender/domain. Credentials belong in the host's
-secret settings; do not commit them or paste them into a PR.
+The sender and welcome reply address default to `info@cronoverse.online` in Django.
+The environment example selects the existing `lh@cronoverse.online` mailbox for
+owner alerts. Enable `info@cronoverse.online` as a mailbox or receiving alias
+with the existing mailbox provider so customer replies reach you. Verify the
+sender address or `cronoverse.online` domain in Mailjet to authorize sending.
+Setting a From header in Django does not create a mailbox or verify a sender.
+
+Django creates and sends these messages on the backend server through its SMTP
+backend, connecting to Mailjet over STARTTLS. No Mailjet SDK or browser-side email
+credentials are needed. Credentials belong in the host's secret settings; do not
+commit them or paste them into a PR. Local development stays on the console
+backend until SMTP is explicitly selected.
+
+### Activate Mailjet delivery
+
+1. In Mailjet, add and validate `cronoverse.online` under the API key used for this
+   backend, or verify `info@cronoverse.online` as a sender address. Domain validation
+   by DNS uses the TXT value shown in your Mailjet account.
+2. Add the SPF and DKIM records shown by Mailjet to the domain's DNS and confirm
+   their status in Mailjet. If the domain already has SPF for its mailbox
+   provider, merge Mailjet's authorization into that record rather than adding
+   a second SPF record. Keep the existing mailbox MX records.
+3. In **Account settings → SMTP and SEND API settings**, obtain the API Key and
+   Secret Key. The SMTP login is these keys, not an email address or the password
+   used to log into Mailjet or the existing mailbox.
+4. Configure the backend environment as follows and keep the email worker running:
+
+```dotenv
+EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend
+EMAIL_HOST=in-v3.mailjet.com
+EMAIL_PORT=587
+EMAIL_USE_TLS=1
+EMAIL_USE_SSL=0
+DEFAULT_FROM_EMAIL=Cronoverse Web Studio <info@cronoverse.online>
+INQUIRY_NOTIFICATION_EMAIL=lh@cronoverse.online
+INQUIRY_REPLY_TO_EMAIL=info@cronoverse.online
+```
+
+Set `EMAIL_HOST_USER` to the API Key and `EMAIL_HOST_PASSWORD` to the Secret Key
+separately in server secret storage. These public settings alone do not activate
+delivery. Domain verification is specific to the API key: use the key whose
+sender/domain you verified. See Mailjet's [SMTP configuration](https://documentation.mailjet.com/hc/en-us/articles/360043229473-How-can-I-configure-my-SMTP-parameters),
+[domain validation](https://documentation.mailjet.com/hc/en-us/articles/360042561594-How-to-validate-an-entire-sending-domain),
+and [SPF/DKIM guide](https://documentation.mailjet.com/hc/en-us/articles/360049641733-Authenticating-Domains-with-SPF-and-DKIM-A-Complete-Guide).
+
+If the existing mailbox in the screenshot is Namecheap Private Email, create
+the receiving alias via the dropdown next to `lh@cronoverse.online`:
+**Manage Aliases → Add Alias → info → Save Changes**. Mail to the alias reaches
+that mailbox; Django still sends through Mailjet. See Namecheap's
+[alias instructions](https://www.namecheap.com/support/knowledgebase/article.aspx/10791/2215/how-to-create-an-alias-for-namecheap-private-email/).
 
 The visitor gets a plain-text and HTML welcome in their selected language saying
 someone will contact them. The owner's email contains their name, email, business,
@@ -124,7 +171,7 @@ In `backend/.env`, set:
 - `DJANGO_DEBUG=0` and a random `DJANGO_SECRET_KEY` of at least 50 characters.
 - A random `INQUIRY_API_KEY` of at least 32 characters.
 - Explicit `DJANGO_ALLOWED_HOSTS` and HTTPS `DJANGO_CSRF_TRUSTED_ORIGINS`.
-- HTTPS `DJANGO_PUBLIC_BASE_URL`, the actual owner/reply mailboxes, and SMTP settings.
+- HTTPS `DJANGO_PUBLIC_BASE_URL`, the selected Cronoverse mailboxes, and SMTP settings.
 - A generated `POSTGRES_PASSWORD`; use hexadecimal characters for the Compose
   database URL, or URL-encode special characters in a separately configured URL.
 

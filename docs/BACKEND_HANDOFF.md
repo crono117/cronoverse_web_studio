@@ -53,8 +53,13 @@ orders, and charts in the carousel are still isolated samples.
 
 ## Before activation
 
+The selected SMTP provider is Mailjet: `in-v3.mailjet.com:587` with STARTTLS.
+Both messages come from `Cronoverse Web Studio <info@cronoverse.online>`; owner
+alerts go to `lh@cronoverse.online`, and welcome replies go to `info@cronoverse.online`.
+
 The implementation is testable locally. Live activation needs a Python host,
-SMTP provider and credential, approved sender, the owner's notification address,
-a running email worker, and the Site's backend runtime configuration. Keep all
-credentials and inquiry records out of Git. Run checks/builds, then test both
-messages using the owner's own email address before inviting real submissions.
+Mailjet API/Secret keys in server secret storage, sender/domain verification in
+Mailjet, a working `info` mailbox or alias for replies, a running email worker,
+and the Site's backend runtime configuration. Keep all credentials and inquiry
+records out of Git. Run checks/builds, then test both messages using the owner's
+own email address before inviting real submissions.

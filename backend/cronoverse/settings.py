@@ -42,8 +42,8 @@ EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD", "")
 EMAIL_USE_TLS = flag("EMAIL_USE_TLS", True)
 EMAIL_USE_SSL = flag("EMAIL_USE_SSL")
 EMAIL_TIMEOUT = int(os.getenv("EMAIL_TIMEOUT", "15"))
-DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "Cronoverse <hello@example.com>" if DEBUG else "")
-INQUIRY_REPLY_TO_EMAIL = os.getenv("INQUIRY_REPLY_TO_EMAIL", INQUIRY_NOTIFICATION_EMAIL).strip()
+DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "Cronoverse Web Studio <info@cronoverse.online>")
+INQUIRY_REPLY_TO_EMAIL = os.getenv("INQUIRY_REPLY_TO_EMAIL", "info@cronoverse.online").strip()
 EMAIL_MAX_ATTEMPTS = 8
 EMAIL_LEASE_SECONDS = max(120, EMAIL_TIMEOUT * 4)
 

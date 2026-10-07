@@ -41,8 +41,9 @@ corepack pnpm dev
 Start Django and its email worker using [the backend setup](docs/DJANGO_BACKEND.md)
 before submitting the form. Open the frontend's printed local URL, normally `http://localhost:5173`. Local development
 requires no Cloudflare login or production database access. Development keys
-and example mailboxes are provided for local testing only; emails print to the
-worker terminal until SMTP is selected.
+are for local testing only. The environment example selects the Cronoverse
+addresses and Mailjet host; emails print to the worker terminal until SMTP is
+selected and Mailjet credentials are configured.
 
 Clean clones automatically select the portable execution profile. The optional
 `.sites-runtime` configuration belongs to managed ChatGPT previews and is not
@@ -66,13 +67,16 @@ database files are not tracked.
 
 `POST /api/inquiries` validates and forwards inquiries to Django using a
 server-only key. Django commits the inquiry and two email jobs together. The
-email worker sends a welcome to the visitor and a notification to the configured
-owner mailbox. SMTP failures preserve the inquiry and retry automatically.
+email worker sends a welcome to the visitor and a notification to
+`lh@cronoverse.online`, both from `Cronoverse Web Studio <info@cronoverse.online>`
+through Mailjet SMTP. Customers can reply to the welcome at `info@cronoverse.online`.
+SMTP failures preserve the inquiry and retry automatically.
 Django/Jazzmin admin provides search, statuses, notes, and delivery/retry controls.
 
 Read [the Django setup and deployment guide](docs/DJANGO_BACKEND.md). Live email
-activation requires a Python host, SMTP credentials, an approved sender, the
-owner's notification address, and the frontend's backend runtime settings.
+activation requires a Python host, Mailjet API/Secret keys in server secret
+storage, sender/domain verification in Mailjet, a working `info` mailbox or alias
+for replies, and the frontend's backend runtime settings.
 
 ## Source map
 

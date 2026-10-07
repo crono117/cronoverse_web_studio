@@ -39,9 +39,9 @@ def create_inquiry(**changes):
 
 @override_settings(
     INQUIRY_API_KEY="test-shared-key",
-    INQUIRY_NOTIFICATION_EMAIL="owner@example.com",
-    INQUIRY_REPLY_TO_EMAIL="owner@example.com",
-    DEFAULT_FROM_EMAIL="Cronoverse <studio@example.com>",
+    INQUIRY_NOTIFICATION_EMAIL="lh@cronoverse.online",
+    INQUIRY_REPLY_TO_EMAIL="info@cronoverse.online",
+    DEFAULT_FROM_EMAIL="Cronoverse Web Studio <info@cronoverse.online>",
     EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend",
     PUBLIC_BASE_URL="https://backend.example.com",
     STORAGES={
@@ -73,9 +73,13 @@ class InquiryFlowTests(TransactionTestCase):
         self.drain()
         self.assertEqual(len(mail.outbox), 2)
         welcome = next(message for message in mail.outbox if message.to == ["alex@example.com"])
-        alert = next(message for message in mail.outbox if message.to == ["owner@example.com"])
+        alert = next(message for message in mail.outbox if message.to == ["lh@cronoverse.online"])
         self.assertIn("someone from our team will contact you", welcome.body)
-        self.assertEqual(welcome.reply_to, ["owner@example.com"])
+        self.assertEqual(welcome.reply_to, ["info@cronoverse.online"])
+        self.assertTrue(all(
+            message.from_email == "Cronoverse Web Studio <info@cronoverse.online>"
+            for message in mail.outbox
+        ))
         self.assertIn(inquiry.message, alert.body)
         self.assertIn("/admin/inquiries/inquiry/" + str(inquiry.id) + "/change/", alert.body)
         self.assertEqual(alert.reply_to, ["alex@example.com"])

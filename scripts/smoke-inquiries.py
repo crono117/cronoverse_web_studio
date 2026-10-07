@@ -75,9 +75,9 @@ def main():
                 "DJANGO_TRUST_PROXY": "0",
                 "DATABASE_URL": "sqlite:///" + str(Path(temp) / "smoke.sqlite3"),
                 "INQUIRY_API_KEY": secrets.token_urlsafe(32),
-                "INQUIRY_NOTIFICATION_EMAIL": "smoke-owner@example.com",
-                "INQUIRY_REPLY_TO_EMAIL": "smoke-owner@example.com",
-                "DEFAULT_FROM_EMAIL": "Cronoverse <smoke-sender@example.com>",
+                "INQUIRY_NOTIFICATION_EMAIL": "lh@cronoverse.online",
+                "INQUIRY_REPLY_TO_EMAIL": "info@cronoverse.online",
+                "DEFAULT_FROM_EMAIL": "Cronoverse Web Studio <info@cronoverse.online>",
                 "STUDIO_URL": "https://studio.example.com",
                 "EMAIL_BACKEND": "django.core.mail.backends.smtp.EmailBackend",
                 "EMAIL_HOST": "127.0.0.1",
@@ -142,14 +142,19 @@ process.stdout.write(JSON.stringify(results));
                 assert len(smtp.messages) == 2
                 by_recipient = {str(message["To"]): message for message in smtp.messages}
                 welcome = by_recipient["smoke-customer@example.com"]
-                notification = by_recipient["smoke-owner@example.com"]
+                notification = by_recipient["lh@cronoverse.online"]
+                assert all(
+                    str(message["From"]) == "Cronoverse Web Studio <info@cronoverse.online>"
+                    for message in smtp.messages
+                )
+                assert str(welcome["Reply-To"]) == "info@cronoverse.online"
                 assert "Bienvenido" in str(welcome["Subject"])
                 assert "alguien de nuestro equipo te contactará" in welcome.get_body(preferencelist=("plain",)).get_content()
                 assert welcome.get_body(preferencelist=("html",)) is not None
                 assert str(notification["Reply-To"]) == "smoke-customer@example.com"
                 assert "/admin/inquiries/inquiry/" in notification.get_body(preferencelist=("plain",)).get_content()
                 assert notification.get_body(preferencelist=("html",)) is not None
-                print("SMTP smoke passed: proxy 201/200, one inquiry, two accepted multipart emails, no duplicate sends.")
+                print("SMTP smoke passed: proxy 201/200, one inquiry, two multipart emails from info@cronoverse.online, owner alert to lh@cronoverse.online, no duplicate sends.")
                 connections.close_all()
                 web.terminate()
                 web.wait(timeout=10)
