@@ -13,7 +13,7 @@ from django.contrib.messages.storage.fallback import FallbackStorage
 from django.core import mail
 from django.core.management import call_command
 from django.db import DatabaseError, connection, connections
-from django.test import RequestFactory, TestCase, TransactionTestCase, override_settings
+from django.test import RequestFactory, TransactionTestCase, override_settings
 from django.utils import timezone
 from rest_framework.test import APIClient
 
@@ -49,7 +49,7 @@ def create_inquiry(**changes):
         "staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"},
     },
 )
-class InquiryFlowTests(TestCase):
+class InquiryFlowTests(TransactionTestCase):
     def setUp(self):
         self.client = APIClient()
         self.client.credentials(HTTP_X_INQUIRY_API_KEY="test-shared-key")
