@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="en"><body style="margin:0;background:#f3f5f8;color:#0D1628;font-family:Arial,sans-serif;">
+<main style="max-width:600px;margin:32px auto;padding:32px;background:#fff;border-top:4px solid #62C5FF;">
+<h1 style="font-size:26px;">New project inquiry</h1>
+<p style="font-size:16px;line-height:1.6;">Someone is interested in working with Cronoverse Web Studio.</p>
+<dl style="font-size:16px;line-height:1.6;">
+<dt><strong>Name</strong></dt><dd>{{ inquiry.name }}</dd>
+<dt><strong>Email</strong></dt><dd>{{ inquiry.email }}</dd>
+<dt><strong>Business</strong></dt><dd>{{ inquiry.business|default:"Not provided" }}</dd>
+<dt><strong>Service</strong></dt><dd>{{ inquiry.get_service_display }}</dd>
+<dt><strong>Preferred language</strong></dt><dd>{{ inquiry.get_language_display }}</dd>
+<dt><strong>Received</strong></dt><dd>{{ inquiry.created_at }}</dd>
+</dl>
+<h2 style="font-size:20px;">Project details</h2>
+<div style="font-size:16px;line-height:1.6;">{{ inquiry.message|linebreaksbr }}</div>
+<p style="font-size:16px;line-height:1.6;"><a href="{{ admin_url }}" style="color:#16547a;">Open inquiry in Django admin</a></p>
+<p style="font-size:14px;">Reply to this email to contact the prospective customer.</p>
+</main></body></html>
