@@ -2,7 +2,12 @@
 
 Bilingual web design and development studio website for Southern California.
 Contains the approved frontend, original artwork, interactive examples, and the
-initial project-inquiry backend.
+dedicated Django backend on `feat/django-backend`.
+
+This branch adds Django, Mailjet emails, and the Google Analytics admin dashboard.
+Its frontend is the unchanged `main` baseline; connecting the updated animated
+frontend is the next integration step. Start with
+[the home-machine handoff](docs/HOME_MACHINE_HANDOFF.md).
 
 ## Current experience
 
@@ -56,15 +61,25 @@ The build produces a Worker and assets under `dist/`. `start` runs that output
 locally with Wrangler; use its printed URL. Apply local migrations before using
 the inquiry form. Build output and local database files are not tracked.
 
-## Backend starting point
+## Dedicated Django backend
 
 `POST /api/inquiries` validates project inquiries and saves them to D1. It checks
 Origin when provided, uses a honeypot, handles ordinary retries with a UUID, and
-limits submissions per email address. There is no admin inbox, authenticated
-inquiry-read endpoint, email delivery, or CRM integration yet.
+limits submissions per email address. That is the existing frontend route; this
+branch keeps it in place until the frontend is connected to Django.
+
+The separate Python service in `backend/` provides authenticated inquiry intake,
+Django/Jazzmin admin, and durable email jobs. Its worker sends an English/Spanish
+welcome and an owner notification through Mailjet SMTP, both from
+`Cronoverse Web Studio <info@cronoverse.online>`. Owner alerts go to
+`lh@cronoverse.online`. The staff-only `/admin/analytics/` page reads GA4 visitors,
+sessions, page views, inquiry conversions, trends, sources, and devices.
 
 Read [the backend handoff](docs/BACKEND_HANDOFF.md) for the request contract,
-limitations, and proposed first backend milestone.
+and [Django setup](docs/DJANGO_BACKEND.md) to run the API and email worker without
+the frontend. [Google Analytics setup](docs/GOOGLE_ANALYTICS.md) covers the
+reporting credentials and the tracking integration needed on the updated website.
+Real Mailjet delivery and Google reporting require private server configuration.
 
 ## Source map
 
@@ -75,6 +90,8 @@ limitations, and proposed first backend milestone.
 | `components/capability-showcase.tsx` | Five interactive sample applications |
 | `components/dust-surface.tsx` | Canvas particle accents |
 | `app/api/inquiries/route.ts` | Public inquiry submission endpoint |
+| `backend/` | Django API, admin, GA4 reports, and Mailjet email worker |
+| `docs/HOME_MACHINE_HANDOFF.md` | Instructions for connecting the updated frontend |
 | `db/schema.ts`, `db/raw.ts` | Database schema and D1 access |
 | `drizzle/` | Versioned database migrations |
 | `wrangler.local.jsonc` | Local-only migration configuration |
@@ -87,6 +104,10 @@ The existing website is hosted through ChatGPT Sites. `.openai/hosting.json`
 identifies that Site and its `DB` binding; it contains no secrets. GitHub pushes
 **do not automatically deploy** the live website. No deployment workflow is
 configured in this initial export.
+
+GitHub Actions checks the Django branch against PostgreSQL. The Django web and
+email-worker processes still need their own Python host; this branch does not
+deploy them or change the existing website.
 
 The database ID in the local configuration is an emulator placeholder. Hosting
 outside Sites requires a deliberate deployment configuration and real bindings.
