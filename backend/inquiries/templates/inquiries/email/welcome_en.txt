@@ -1,0 +1,10 @@
+{% autoescape off %}Hi {{ inquiry.name }},
+
+Welcome to Cronoverse Web Studio! Thank you for telling us about your project.
+We received your inquiry, and someone from our team will contact you to discuss your ideas and next steps.
+
+You can reply to this email if there is anything else you would like to share.
+
+Cronoverse Web Studio
+{{ studio_url }}
+{% endautoescape %}

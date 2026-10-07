@@ -1,0 +1,18 @@
+{% autoescape off %}Someone is interested in working with Cronoverse Web Studio.
+
+Name: {{ inquiry.name }}
+Email: {{ inquiry.email }}
+Business: {{ inquiry.business|default:"Not provided" }}
+Service: {{ inquiry.get_service_display }}
+Preferred language: {{ inquiry.get_language_display }}
+Received: {{ inquiry.created_at }}
+Inquiry ID: {{ inquiry.id }}
+
+Project details:
+{{ inquiry.message }}
+
+Open this inquiry in Django admin:
+{{ admin_url }}
+
+Reply to this email to contact the prospective customer.
+{% endautoescape %}
