@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { env } from "cloudflare:workers";
+import { GoogleAnalytics } from "@/components/google-analytics";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -17,7 +19,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className="antialiased">{children}</body>
+      <body className="antialiased">
+        {children}
+        <GoogleAnalytics id={env.GA4_MEASUREMENT_ID} />
+      </body>
     </html>
   );
 }

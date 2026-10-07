@@ -2,7 +2,7 @@
 
 Bilingual web design and development studio website for Southern California.
 Contains the approved frontend, original artwork, interactive examples, and the
-initial project-inquiry backend.
+Django project-inquiry backend with SMTP emails and an admin inbox.
 
 ## Current experience
 
@@ -10,7 +10,8 @@ initial project-inquiry backend.
 - Digital SoCal sunset hero, particle accents, and reduced-motion support.
 - Approved Saturn-eye icon: blue planet, red iris, dark navy ring.
 - Interactive inventory, landing page, business profile, order grid, and charts.
-- Inquiry form with server validation and Cloudflare D1 storage.
+- Inquiry form with Django storage, English/Spanish welcome emails, owner notifications, and Django/Jazzmin admin.
+- GA4 visitor/inquiry tracking and a protected Google Analytics dashboard in Django admin.
 
 The carousel uses sample data and component state. It does not create real
 products, orders, sales, or appointments.
@@ -20,25 +21,30 @@ products, orders, sales, or appointments.
 ## Stack
 
 React 19, TypeScript, Vinext/Vite with Next.js-style App Router routes, Tailwind,
-Shadcn components, Embla, Recharts, Cloudflare Workers, D1, and Drizzle.
+Shadcn components, Embla, Recharts, and Cloudflare Workers for the frontend.
+Django 5.2, Django REST Framework, Jazzmin, SMTP, and PostgreSQL (SQLite locally)
+for inquiries. The legacy D1 schema and Drizzle files remain for historical data.
 Use the package scripts, not `next dev`.
 
 ## Run locally
 
-Requirements: Node.js 22.13+ and pnpm 11.25.0 (pinned in `package.json`).
+Requirements: Python 3.12+, Node.js 22.13+, and pnpm 11.25.0 (pinned in `package.json`).
 
 ```sh
 git clone https://github.com/crono117/cronoverse_web_studio.git
 cd cronoverse_web_studio
 corepack enable
 corepack pnpm install --frozen-lockfile
-corepack pnpm db:migrate:local
+cp .dev.vars.example .dev.vars
 corepack pnpm dev
 ```
 
-Open the printed local URL, normally `http://localhost:5173`. Local development
-requires no Cloudflare login, API keys, or production database access. Local D1
-state lives in ignored `.wrangler/state` files.
+Start Django and its email worker using [the backend setup](docs/DJANGO_BACKEND.md)
+before submitting the form. Open the frontend's printed local URL, normally `http://localhost:5173`. Local development
+requires no Cloudflare login or production database access. Development keys
+are for local testing only. The environment example selects the Cronoverse
+addresses and Mailjet host; emails print to the worker terminal until SMTP is
+selected and Mailjet credentials are configured.
 
 Clean clones automatically select the portable execution profile. The optional
 `.sites-runtime` configuration belongs to managed ChatGPT previews and is not
@@ -47,24 +53,41 @@ committed. The managed `install:ci` helper is not needed for a normal local clon
 ## Checks and build
 
 ```sh
+corepack pnpm test:inquiries
+corepack pnpm test:analytics
 corepack pnpm typecheck
 corepack pnpm build
 corepack pnpm start
 ```
 
 The build produces a Worker and assets under `dist/`. `start` runs that output
-locally with Wrangler; use its printed URL. Apply local migrations before using
-the inquiry form. Build output and local database files are not tracked.
+locally with Wrangler; use its printed URL. Django database migrations are
+required before using the inquiry form. Build output, credentials, and local
+database files are not tracked.
 
-## Backend starting point
+## Inquiry backend
 
-`POST /api/inquiries` validates project inquiries and saves them to D1. It checks
-Origin when provided, uses a honeypot, handles ordinary retries with a UUID, and
-limits submissions per email address. There is no admin inbox, authenticated
-inquiry-read endpoint, email delivery, or CRM integration yet.
+`POST /api/inquiries` validates and forwards inquiries to Django using a
+server-only key. Django commits the inquiry and two email jobs together. The
+email worker sends a welcome to the visitor and a notification to
+`lh@cronoverse.online`, both from `Cronoverse Web Studio <info@cronoverse.online>`
+through Mailjet SMTP. Customers can reply to the welcome at `info@cronoverse.online`.
+SMTP failures preserve the inquiry and retry automatically.
+Django/Jazzmin admin provides search, statuses, notes, and delivery/retry controls.
 
-Read [the backend handoff](docs/BACKEND_HANDOFF.md) for the request contract,
-limitations, and proposed first backend milestone.
+Read [the Django setup and deployment guide](docs/DJANGO_BACKEND.md). Live email
+activation requires a Python host, Mailjet API/Secret keys in server secret
+storage, sender/domain verification in Mailjet, a working `info` mailbox or alias
+for replies, and the frontend's backend runtime settings.
+
+## Website analytics
+
+GA4 tracks consenting visitors and accepted inquiries. Set the public runtime
+`GA4_MEASUREMENT_ID` on the frontend to activate it. The **Website analytics**
+page in Django admin shows Google-reported active users, sessions, page views,
+inquiry events, daily trends, traffic sources, devices, and recent activity.
+It requires the numeric `GA4_PROPERTY_ID` and a server-only reporting credential
+with Viewer access. See [Google Analytics setup](docs/GOOGLE_ANALYTICS.md).
 
 ## Source map
 
@@ -74,9 +97,10 @@ limitations, and proposed first backend milestone.
 | `app/globals.css` | Approved styling and responsive layouts |
 | `components/capability-showcase.tsx` | Five interactive sample applications |
 | `components/dust-surface.tsx` | Canvas particle accents |
-| `app/api/inquiries/route.ts` | Public inquiry submission endpoint |
-| `db/schema.ts`, `db/raw.ts` | Database schema and D1 access |
-| `drizzle/` | Versioned database migrations |
+| `app/api/inquiries/route.ts`, `lib/inquiry-intake.ts` | Public inquiry endpoint and Django proxy |
+| `backend/` | Django API, database migrations, SMTP worker, and admin |
+| `db/schema.ts`, `db/raw.ts` | Legacy D1 schema/access; retained for historical data |
+| `drizzle/` | Legacy D1 database migrations |
 | `wrangler.local.jsonc` | Local-only migration configuration |
 | `public/hero-digital-palms.png` | Approved hero illustration |
 | `public/cronoverse-saturn-eye-navy.png` | Navbar, footer, and favicon artwork |
@@ -86,16 +110,17 @@ limitations, and proposed first backend milestone.
 The existing website is hosted through ChatGPT Sites. `.openai/hosting.json`
 identifies that Site and its `DB` binding; it contains no secrets. GitHub pushes
 **do not automatically deploy** the live website. No deployment workflow is
-configured in this initial export.
+configured. Source checks are provided by GitHub Actions.
 
-The database ID in the local configuration is an emulator placeholder. Hosting
+The Django API and email worker run on a separate Python host. GitHub stores
+the source but does not start that host or configure SMTP. The D1 database ID
+in the local configuration is an emulator placeholder. Hosting
 outside Sites requires a deliberate deployment configuration and real bindings.
 `app/chatgpt-auth.ts` depends on trusted identity headers from Sites and is not
 standalone production authentication.
 
 This is a snapshot of approved Sites source commit
-`3efc509ea500e4b215415844282e5f17ce8f113e`, plus setup documentation and local
-commands. Production inquiry records, credentials, and local runtime state are
+`3efc509ea500e4b215415844282e5f17ce8f113e`, plus setup documentation, local commands, and the Django backend integration. Production inquiry records, credentials, and local runtime state are
 not included.
 
 Requested domain: `cronoverse.online`. Preserve `xenos.cronoverse.online` and
