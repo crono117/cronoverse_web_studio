@@ -36,7 +36,9 @@ Measured on the running stack (production Django settings, after traffic), in Mi
 | db (PostgreSQL, tuned small) | 21 |
 | **Total** | **about 400** |
 
-The frontend is the heavy part, because it runs a full Workers runtime. A server that is
+The frontend is the heavy part, because it runs a full Workers runtime, and it spikes
+well above its resting size (about 310 MiB under a small burst on the live server, so it
+is capped at 512 MiB; a 320 MiB cap was hit 137 times and stalled requests). A server that is
 already using most of a 1 GB machine cannot take another 400 MiB without pushing the
 other service into swap or out-of-memory kills. As of the review that led to this
 setup, the Xenos droplet (1 vCPU, 1 GB) had about 347 MiB available and was already
@@ -174,6 +176,7 @@ The proxy accepts plain HTTP only for loopback addresses and for dotless hostnam
 
 | Symptom | Check |
 | --- | --- |
+| Intermittent 503 "worker restarted mid-request" | Memory pressure on the frontend. Compare `memory.peak` and `memory.events` (`max` counts how often the limit was hit) in `/sys/fs/cgroup/system.slice/docker-<container id>.scope/`, and raise `mem_limit` in `compose.yaml`. |
 | Form shows "could not be saved" | First test the Origin check: `curl -s -X POST https://YOUR_SITE/api/inquiries -H 'Content-Type: application/json' -H 'Origin: https://YOUR_SITE' -d '{"website":"x"}'`. `Invalid origin` (403) means the site's public origin is missing from `INQUIRY_ALLOWED_ORIGINS` (it defaults to `STUDIO_URL`); `Please check your details` (400) means the origin check passed. Otherwise `docker compose logs frontend backend`. A 503 from the proxy means Django was unreachable or rejected the key; confirm both containers hold the same `INQUIRY_API_KEY`. |
 | Django 400 `DisallowedHost` | The `Host` is missing from `DJANGO_ALLOWED_HOSTS`. |
 | Caddy cannot get a certificate | DNS records must resolve to the server and ports 80 and 443 must be open (they are, for Xenos). `docker logs xenos-caddy-1`. |

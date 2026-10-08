@@ -37,7 +37,9 @@ services:
       # Caddy ends TLS, so the browser's https Origin differs from the http request the
       # frontend sees. List the public origin(s); it defaults to the site's STUDIO_URL.
       INQUIRY_ALLOWED_ORIGINS: ${INQUIRY_ALLOWED_ORIGINS:-${STUDIO_URL:-}}
-    mem_limit: 320m
+    # Measured about 240 MiB at rest and spikes toward 310 MiB under bursts; a 320 MiB cap was
+    # hit repeatedly on the live server, so leave real headroom.
+    mem_limit: 512m
     networks:
       edge: { aliases: [cronoverse-frontend] }
     depends_on:
