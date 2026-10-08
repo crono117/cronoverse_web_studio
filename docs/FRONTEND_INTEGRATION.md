@@ -82,6 +82,13 @@ These were found by running the integration, not by reading it.
    dotless hostnames, which only private DNS can resolve. Dotted hosts, bare IP
    addresses, and credentialed URLs still require HTTPS, and the existing proxy test
    covers each case.
+6. **Public origin behind a TLS proxy.** The same-origin check compared the browser's
+   `Origin` with the request URL, but behind Caddy the frontend sees plain `http`, so a
+   real browser's `https://` origin never matched and every submission was refused with
+   403. This surfaced only on the live site (the local tests used the same scheme end to
+   end). `INQUIRY_ALLOWED_ORIGINS` now lists the public origin(s), defaulting to
+   `STUDIO_URL` in the Docker stack. It is an explicit allow-list rather than trusting
+   forwarded headers, and a listed origin never admits any other host or scheme.
 
 ## Request flow
 

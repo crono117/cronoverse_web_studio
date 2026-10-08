@@ -35,6 +35,16 @@ test("passes an acknowledged unchanged retry through as 200", async () => {
 test("rejects invalid origin, JSON, fields and honeypot before contacting backend", async () => {
   const never = async () => { throw new Error("Should not contact backend"); };
   assert.equal((await submitInquiry(request(payload, { Origin: "https://other.example.com" }), config, never)).status, 403);
+  // Behind a TLS-terminating proxy the request URL is http but the browser's Origin is https:
+  // that is rejected unless the public origin is listed, and a listed origin never widens to others.
+  const proxied = (origin) => new Request("http://studio.internal/api/inquiries", { method: "POST", headers: { "Content-Type": "application/json", Origin: origin }, body: JSON.stringify(payload) });
+  const listed = { ...config, INQUIRY_ALLOWED_ORIGINS: "https://studio.example.com,not a url, https://www.studio.example.com/path" };
+  assert.equal((await submitInquiry(proxied("https://studio.example.com"), config, never)).status, 403);
+  assert.equal((await submitInquiry(proxied("https://studio.example.com"), listed, async () => Response.json({ ok: true }, { status: 201 }))).status, 201);
+  assert.equal((await submitInquiry(proxied("https://www.studio.example.com"), listed, async () => Response.json({ ok: true }))).status, 200);
+  for (const origin of ["https://evil.example.com", "http://studio.example.com", "https://studio.example.com.evil.com"]) {
+    assert.equal((await submitInquiry(proxied(origin), listed, never)).status, 403, origin);
+  }
   assert.equal((await submitInquiry(request(payload, { "Content-Type": "text/plain" }), config, never)).status, 415);
   for (const changes of [{ email: "invalid" }, { website: "spam" }, { service: "other" }, { unknown: true }, { name: "Multi\nLine" }]) {
     assert.equal((await submitInquiry(request({ ...payload, ...changes }), config, never)).status, 400);

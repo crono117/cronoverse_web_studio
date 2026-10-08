@@ -15,6 +15,23 @@ const schema = z.object({
 export interface InquiryBackendConfig {
   INQUIRY_BACKEND_URL?: string;
   INQUIRY_API_KEY?: string;
+  // Comma-separated public origins of this site, for example https://example.com.
+  // Behind a TLS-terminating proxy the request arrives as plain http, so the browser's
+  // Origin (https://...) never equals the request URL's origin and must be listed here.
+  INQUIRY_ALLOWED_ORIGINS?: string;
+}
+
+function allowedOrigins(request: Request, config: InquiryBackendConfig) {
+  const allowed = new Set([new URL(request.url).origin]);
+  for (const entry of (config.INQUIRY_ALLOWED_ORIGINS ?? "").split(",")) {
+    try {
+      const url = new URL(entry.trim());
+      if (["https:", "http:"].includes(url.protocol)) allowed.add(url.origin);
+    } catch {
+      // A malformed entry never widens the allow-list.
+    }
+  }
+  return allowed;
 }
 
 function response(body: object, status: number, headers: Record<string, string> = {}) {
@@ -69,7 +86,7 @@ export async function submitInquiry(
     return response({ error: "Expected JSON" }, 415);
   }
   const origin = request.headers.get("origin");
-  if (origin && origin !== new URL(request.url).origin) {
+  if (origin && !allowedOrigins(request, config).has(origin)) {
     return response({ error: "Invalid origin" }, 403);
   }
   let body: unknown;

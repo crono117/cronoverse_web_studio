@@ -5,5 +5,6 @@ declare namespace Cloudflare {
     GA4_MEASUREMENT_ID?: string;
     INQUIRY_BACKEND_URL?: string;
     INQUIRY_API_KEY?: string;
+    INQUIRY_ALLOWED_ORIGINS?: string;
   }
 }

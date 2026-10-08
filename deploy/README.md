@@ -174,7 +174,7 @@ The proxy accepts plain HTTP only for loopback addresses and for dotless hostnam
 
 | Symptom | Check |
 | --- | --- |
-| Form shows "could not be saved" | `docker compose logs frontend backend`. A 503 from the proxy means Django was unreachable or rejected the key; confirm both containers hold the same `INQUIRY_API_KEY`. |
+| Form shows "could not be saved" | First test the Origin check: `curl -s -X POST https://YOUR_SITE/api/inquiries -H 'Content-Type: application/json' -H 'Origin: https://YOUR_SITE' -d '{"website":"x"}'`. `Invalid origin` (403) means the site's public origin is missing from `INQUIRY_ALLOWED_ORIGINS` (it defaults to `STUDIO_URL`); `Please check your details` (400) means the origin check passed. Otherwise `docker compose logs frontend backend`. A 503 from the proxy means Django was unreachable or rejected the key; confirm both containers hold the same `INQUIRY_API_KEY`. |
 | Django 400 `DisallowedHost` | The `Host` is missing from `DJANGO_ALLOWED_HOSTS`. |
 | Caddy cannot get a certificate | DNS records must resolve to the server and ports 80 and 443 must be open (they are, for Xenos). `docker logs xenos-caddy-1`. |
 | `docker compose up` says the network is missing | Start the Cronoverse stack first; it creates `cronoverse_edge`. |

@@ -6,5 +6,6 @@ export async function POST(request: Request) {
   return submitInquiry(request, {
     INQUIRY_BACKEND_URL: env.INQUIRY_BACKEND_URL,
     INQUIRY_API_KEY: env.INQUIRY_API_KEY,
+    INQUIRY_ALLOWED_ORIGINS: env.INQUIRY_ALLOWED_ORIGINS,
   });
 }

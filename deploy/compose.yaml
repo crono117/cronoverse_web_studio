@@ -29,11 +29,14 @@ services:
     <<: *service
     image: cronoverse-frontend:${CRONOVERSE_TAG:-latest}
     build: { context: .. }
-    # The frontend sees only these three values, not the Django, database, or Mailjet secrets.
+    # The frontend sees only these values, not the Django, database, or Mailjet secrets.
     environment:
       INQUIRY_BACKEND_URL: http://backend:8000
       INQUIRY_API_KEY: ${INQUIRY_API_KEY:?Set INQUIRY_API_KEY in deploy/.env}
       GA4_MEASUREMENT_ID: ${GA4_MEASUREMENT_ID:-}
+      # Caddy ends TLS, so the browser's https Origin differs from the http request the
+      # frontend sees. List the public origin(s); it defaults to the site's STUDIO_URL.
+      INQUIRY_ALLOWED_ORIGINS: ${INQUIRY_ALLOWED_ORIGINS:-${STUDIO_URL:-}}
     mem_limit: 320m
     networks:
       edge: { aliases: [cronoverse-frontend] }
