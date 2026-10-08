@@ -1,0 +1,12 @@
+# Optional reporting credential mount; keep the source JSON outside this checkout.
+# docker compose -f compose.yaml -f compose.analytics.yaml up -d --build
+services:
+  web:
+    environment:
+      GOOGLE_APPLICATION_CREDENTIALS: /run/secrets/google_analytics_credentials
+    secrets:
+      - google_analytics_credentials
+
+secrets:
+  google_analytics_credentials:
+    file: ${GA4_CREDENTIALS_SOURCE_FILE:?Set the absolute credential path outside the checkout}

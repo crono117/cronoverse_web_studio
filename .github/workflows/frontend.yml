@@ -1,0 +1,42 @@
+name: Frontend and integration checks
+
+on:
+  push:
+    branches: [main, feat/frontend-django-integration]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --global pnpm@11.25.0
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm test:inquiries
+      - run: pnpm test:analytics
+      - run: pnpm typecheck
+      - run: pnpm lint
+      - run: pnpm build
+
+  # Drives the real proxy code into a real Django server and email worker over
+  # loopback, with a local SMTP receiver. No external mail or services.
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: npm install --global pnpm@11.25.0
+      - run: pnpm install --frozen-lockfile
+      - run: python -m pip install -r backend/requirements.lock.txt
+      - run: python scripts/smoke-inquiries.py
