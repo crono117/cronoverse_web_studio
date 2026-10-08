@@ -1,10 +1,10 @@
 # Website analytics and Django admin reports
 
 This branch includes Django's **Website analytics** reporting page. It reads
-real reports from Google's Analytics Data API. The frontend on this dedicated
-backend branch is unchanged and does not contain the GA4 tracking integration.
-Use [HOME_MACHINE_HANDOFF.md](HOME_MACHINE_HANDOFF.md) to bring the existing
-tracking code into the updated animated frontend, then follow the setup below.
+real reports from Google's Analytics Data API. On
+`feat/frontend-django-integration` the animated frontend includes the
+consent-gated GA4 tracking (`lib/analytics.ts`, `components/google-analytics.tsx`);
+follow the setup below to supply the IDs.
 
 ## Connect website tracking
 
@@ -54,8 +54,8 @@ Tracking and reporting use two different identifiers:
 | `GA4_PROPERTY_ID` | Django environment | Numeric **Property ID** from GA4 property details |
 | `GOOGLE_APPLICATION_CREDENTIALS` | Django environment | Absolute path to a private service-account JSON file |
 
-Only the latter two settings are consumed by this backend branch. The public
-Measurement ID and visitor consent controls belong to the frontend integration.
+Django consumes only the latter two settings. The public Measurement ID and the
+visitor consent controls are used by the frontend.
 
 1. Use the same GA4 property that owns the website's Web stream. A dedicated
    Cronoverse property keeps the dashboard focused on this website; reports
@@ -134,9 +134,8 @@ Backend tests cover admin permissions, reporting requests, caching, empty/error
 states, and escaped external labels using Google's actual response types with
 mocked API calls. Real GA4 retrieval needs the configured property and credential.
 
-The eight consent/tracking tests live in `tests/analytics.test.mjs` on
-`feat/django-inquiry-emails`. Bring them over with the frontend integration,
-then run its `test:analytics`, type check, and build. They cover consent, tag
+The eight consent/tracking tests are in `tests/analytics.test.mjs`; run
+`pnpm test:analytics`, `pnpm typecheck`, and `pnpm build`. They cover consent, tag
 initialization, sanitized URLs, and inquiry-event allowlists/deduplication.
 
 Google references: [Measurement ID](https://support.google.com/analytics/answer/12270356),

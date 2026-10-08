@@ -1,5 +1,7 @@
 # Home-machine integration prompt
 
+> **Status:** carried out on `feat/frontend-django-integration`. What was done, the deviations from the reference code, and what remains is recorded in [FRONTEND_INTEGRATION.md](FRONTEND_INTEGRATION.md). The instructions below are kept as written.
+
 Give the following instructions to the agent on the home PC. This is a source
 integration and local verification task; publication and real email activation
 depend on the owner's configured host and credentials.

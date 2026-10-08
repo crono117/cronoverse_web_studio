@@ -1,8 +1,10 @@
 # Django inquiry backend
 
-`feat/django-backend` contains the Python service independently of frontend
-changes. The frontend in this branch still uses the original D1 route. Connect
-the updated frontend using [HOME_MACHINE_HANDOFF.md](HOME_MACHINE_HANDOFF.md).
+The Python service lives in `backend/` and runs independently of the frontend.
+On `feat/frontend-django-integration` the animated frontend's `/api/inquiries`
+server route is connected to it; see
+[FRONTEND_INTEGRATION.md](FRONTEND_INTEGRATION.md). (`feat/django-backend` itself
+keeps the original D1 route.)
 
 Once connected, the visitor's English/Spanish form submits to a same-origin
 server endpoint that validates and forwards to Django with a server-only shared
@@ -48,8 +50,9 @@ request saves one inquiry and two delivery jobs visible in admin.
 
 After frontend integration, local Worker settings belong in ignored `.dev.vars`;
 backend settings belong in ignored `backend/.env`. The shared key must match
-on both servers. Do not put it in a `NEXT_PUBLIC_*` or `VITE_*` variable. This
-branch does not include frontend runtime examples or the Django proxy route.
+on both servers. Do not put it in a `NEXT_PUBLIC_*` or `VITE_*` variable. `.dev.vars.example`
+and `.env.example` list the frontend runtime keys; `pnpm start` needs a copy of
+`.dev.vars` beside the built Worker config (see FRONTEND_INTEGRATION.md).
 
 ## Mailjet SMTP and owner mailbox
 
@@ -212,11 +215,11 @@ on the existing Site, keeping its audience unchanged:
 - `INQUIRY_BACKEND_URL`: the HTTPS backend origin, without `/api/inquiries`.
 - `INQUIRY_API_KEY`: the same backend secret, marked as a secret.
 
-First integrate the proxy and form changes described in the home-machine handoff.
-Publish that frontend source only after those settings are available. The provided
-reference proxy returns 503 for missing or unreachable Django and keeps the form
+The proxy and form changes are integrated on `feat/frontend-django-integration`.
+Publish that frontend source only after those settings are available. The
+proxy returns 503 for missing or unreachable Django and keeps the form
 available for retry; it has no silent D1 fallback that would bypass admin storage
-and email jobs. The unchanged frontend on this backend branch still uses D1.
+and email jobs. (`feat/django-backend` still uses D1.)
 A GitHub push or PR does not deploy the Site or start the Python host.
 
 The previous D1 binding/schema/migrations remain in the repository to preserve
@@ -234,9 +237,10 @@ DJANGO_DEBUG=1 backend/.venv/bin/python backend/manage.py makemigrations --check
 The tests use in-memory email, test databases, and mocked Google reports. All 32
 Django tests ran successfully on PostgreSQL for the original implementation;
 the same backend is checked independently on this branch. The two concurrency
-tests are skipped on local SQLite. The reference frontend/proxy tests and
-loopback SMTP smoke live on `feat/django-inquiry-emails`; bring them over with
-the frontend integration, then run them alongside its type check and build.
+tests are skipped on local SQLite. The frontend proxy tests (`pnpm test:inquiries`),
+analytics tests (`pnpm test:analytics`), and the loopback SMTP smoke
+(`scripts/smoke-inquiries.py`) are included; run them with `pnpm typecheck`
+and `pnpm build`.
 To verify real delivery,
 configure the provider and submit a test using your own address, then confirm the
 two inbox messages and their admin delivery states. Do not use a prospective

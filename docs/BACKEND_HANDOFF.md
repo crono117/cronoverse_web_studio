@@ -1,15 +1,14 @@
 # Backend handoff
 
-`feat/django-backend` contains the standalone Django implementation: inquiry
-storage, Jazzmin admin, the Mailjet SMTP worker, and the GA4 reporting panel.
-It branches from the original `main` and leaves frontend files unchanged.
-The landing page on this branch still saves to D1 until its server route is
-connected to Django.
+`backend/` contains the standalone Django implementation: inquiry storage,
+Jazzmin admin, the Mailjet SMTP worker, and the GA4 reporting panel. It
+originates on `feat/django-backend`, which keeps the original D1 route. On
+`feat/frontend-django-integration` the animated landing page's server route
+(`app/api/inquiries/route.ts`) forwards inquiries to it.
 
-Run the Python service with [DJANGO_BACKEND.md](DJANGO_BACKEND.md). To combine it
-with the updated animated frontend, give your home agent
-[HOME_MACHINE_HANDOFF.md](HOME_MACHINE_HANDOFF.md). The full prior integration
-on `feat/django-inquiry-emails` is a reference for the proxy and tracking code.
+Run the Python service with [DJANGO_BACKEND.md](DJANGO_BACKEND.md). How the
+frontend and backend were combined, and what remains to configure, is in
+[FRONTEND_INTEGRATION.md](FRONTEND_INTEGRATION.md).
 
 ## Django request contract
 
@@ -77,13 +76,15 @@ See [GOOGLE_ANALYTICS.md](GOOGLE_ANALYTICS.md).
 
 ## Branch boundaries
 
-The new branch changes only `backend/`, backend documentation, ignore rules,
-the README, and a backend CI workflow. It does not replace the hero, install a
-frontend proxy, modify D1 records, deploy a Python host, configure secrets, or
-publish the Site. Preserve historical D1 data during the eventual cutover.
+`feat/django-backend` changes only `backend/`, backend documentation, ignore
+rules, the README, and a backend CI workflow; its frontend still saves to D1.
+`feat/frontend-django-integration` adds the animated frontend, the same-origin
+proxy, and consent-gated GA4 tracking on top of that backend. Neither branch
+deploys a Python host, configures secrets, modifies D1 records, or publishes the
+Site. Preserve historical D1 data during the eventual cutover.
 
-`feat/animated-palm-hero` already contains an independent `backend/config`
-and `backend/leads` scaffold. Import its frontend changes selectively. Use the
-`backend/cronoverse` and `backend/inquiries` implementation from this branch
-for Mailjet and analytics; inspect and migrate any existing local lead data
-before retiring a different backend.
+`feat/animated-palm-hero` contains an independent `backend/config` and
+`backend/leads` scaffold. It was **not** merged: this implementation
+(`backend/cronoverse`, `backend/inquiries`) is authoritative. Existing lead data
+from the scaffold is inventoried in
+[FRONTEND_INTEGRATION.md](FRONTEND_INTEGRATION.md#legacy-scaffold-lead-data).
