@@ -10,7 +10,10 @@ const schema = z.object({
   service: z.enum(["new", "redesign", "app", "unsure"]),
   language: z.enum(["en", "es"]),
   website: z.string().trim().max(500).optional(),
+  captchaToken: z.string().max(2048).optional(),
 }).strict();
+
+const TURNSTILE_VERIFY_URL = "https://challenges.cloudflare.com/turnstile/v0/siteverify";
 
 export interface InquiryBackendConfig {
   INQUIRY_BACKEND_URL?: string;
@@ -19,6 +22,53 @@ export interface InquiryBackendConfig {
   // Behind a TLS-terminating proxy the request arrives as plain http, so the browser's
   // Origin (https://...) never equals the request URL's origin and must be listed here.
   INQUIRY_ALLOWED_ORIGINS?: string;
+  // Cloudflare Turnstile. The check is enforced only when BOTH keys are set, so it can be
+  // deployed before the keys exist. The site key is public; the secret key never leaves the server.
+  TURNSTILE_SITE_KEY?: string;
+  TURNSTILE_SECRET_KEY?: string;
+}
+
+/** The public site key to render, or undefined when the captcha is not fully configured. */
+export function captchaSiteKey(config: Pick<InquiryBackendConfig, "TURNSTILE_SITE_KEY" | "TURNSTILE_SECRET_KEY">) {
+  const site = config.TURNSTILE_SITE_KEY?.trim() ?? "";
+  const secret = config.TURNSTILE_SECRET_KEY?.trim() ?? "";
+  return /^[0-9A-Za-z_-]{10,64}$/.test(site) && secret ? site : undefined;
+}
+
+type CaptchaOutcome = "ok" | "invalid" | "unavailable";
+
+async function verifyCaptcha(
+  token: string | undefined,
+  inquiryId: string,
+  config: InquiryBackendConfig,
+  send: typeof fetch,
+): Promise<CaptchaOutcome> {
+  if (!token) return "invalid";
+  try {
+    // The inquiry UUID is the idempotency key, so retrying the same submission with the same
+    // token (after a transient failure) verifies again instead of failing as a duplicate.
+    const result = await send(TURNSTILE_VERIFY_URL, {
+      method: "POST",
+      body: new URLSearchParams({ secret: config.TURNSTILE_SECRET_KEY!.trim(), response: token, idempotency_key: inquiryId }),
+      signal: AbortSignal.timeout(5_000),
+      redirect: "manual",
+    });
+    if (!result.ok) throw new Error("Turnstile unavailable");
+    const payload: unknown = await result.json();
+    if (!payload || typeof payload !== "object") throw new Error("Invalid Turnstile response");
+    const outcome = payload as { success?: unknown; "error-codes"?: unknown };
+    if (outcome.success === true) return "ok";
+    const codes = Array.isArray(outcome["error-codes"]) ? outcome["error-codes"].map(String) : [];
+    // A wrong or missing secret is our misconfiguration, not the visitor's failure.
+    if (codes.some((code) => code === "missing-input-secret" || code === "invalid-input-secret" || code === "internal-error")) {
+      console.error("captcha_misconfigured", codes.join(","));
+      return "unavailable";
+    }
+    return "invalid";
+  } catch (error) {
+    console.error("captcha_unavailable", error instanceof Error ? error.name : "UnknownError");
+    return "unavailable";
+  }
 }
 
 function allowedOrigins(request: Request, config: InquiryBackendConfig) {
@@ -97,11 +147,17 @@ export async function submitInquiry(
   }
   const parsed = schema.safeParse(body);
   if (!parsed.success || parsed.data.website) return response({ error: "Please check your details" }, 400);
+  const { captchaToken, ...inquiry } = parsed.data;
+  if (captchaSiteKey(config)) {
+    const outcome = await verifyCaptcha(captchaToken, inquiry.id, config, send);
+    if (outcome === "invalid") return response({ error: "Captcha failed" }, 403);
+    if (outcome === "unavailable") return response({ error: "Your inquiry could not be saved. Please try again." }, 503);
+  }
   try {
     const result = await send(backendEndpoint(config), {
       method: "POST",
       headers: { "Content-Type": "application/json", "X-Inquiry-Api-Key": config.INQUIRY_API_KEY! },
-      body: JSON.stringify(parsed.data),
+      body: JSON.stringify(inquiry),
       signal: AbortSignal.timeout(10_000),
       // Workers reject redirect:"error". "manual" never follows a redirect, so the key
       // cannot reach another host; any 3xx is not 200/201 and becomes a generic 503.

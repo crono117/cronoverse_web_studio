@@ -24,6 +24,11 @@ ENV NODE_ENV=production \
     WRANGLER_LOG_PATH=/tmp/wrangler/logs \
     WRANGLER_REGISTRY_PATH=/tmp/wrangler/dev-registry \
     MINIFLARE_REGISTRY_PATH=/tmp/wrangler/registry
+# workerd verifies TLS against the operating system's certificate store, which the slim base
+# image does not include (Node ships its own, so plain Node works and hides the problem).
+# Without it every outbound HTTPS call from the site fails, including captcha verification.
+RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
 # Install and run as the unprivileged user from the start: a later `chown -R` would
 # copy the whole 300 MB install into another image layer.
 RUN mkdir /app && chown node:node /app

@@ -221,3 +221,6 @@ html[lang=es] .hero h1{font-size:clamp(52px,5.7vw,84px);letter-spacing:-3px}
 .analytics-actions button { flex: 1; min-height: 44px; padding: 10px 16px; border: 1px solid #62c5ff; border-radius: 3px; background: transparent; color: #f6f8fc; font: inherit; font-size: .875rem; }
 .analytics-actions button:first-child { background: #62c5ff; color: #0d1628; }
 @media (max-width: 480px) { .analytics-banner { inset: auto 12px 12px 12px; width: auto; padding: 20px; } }
+
+/* Cloudflare Turnstile stays hidden unless it needs the visitor; give it room when it does show. */
+.captcha-slot:not(:empty) { margin: 4px 0 14px; }

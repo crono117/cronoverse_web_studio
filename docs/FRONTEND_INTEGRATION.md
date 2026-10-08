@@ -89,6 +89,16 @@ These were found by running the integration, not by reading it.
    end). `INQUIRY_ALLOWED_ORIGINS` now lists the public origin(s), defaulting to
    `STUDIO_URL` in the Docker stack. It is an explicit allow-list rather than trusting
    forwarded headers, and a listed origin never admits any other host or scheme.
+7. **Automatic retry.** Right after a container restart the live site returned a one-off
+   503 ("worker restarted mid-request") to POSTs, which Wrangler's front proxy does not
+   retry (it silently retries GETs). Spaced probes later showed none (160 of 160 fine), so
+   it is a start-up window. The form now retries up to three times on a 503 or dropped
+   connection before showing an error. That is safe because every attempt reuses the same
+   inquiry ID, which Django treats idempotently.
+8. **CA certificates in the frontend image.** workerd verifies TLS against the operating
+   system's certificate store, which the slim Node base image lacks (Node ships its own,
+   which hid the problem), so every outbound HTTPS call from the site failed. Nothing
+   needed one until the captcha; the image now installs `ca-certificates`.
 
 ## Request flow
 
@@ -258,6 +268,27 @@ What the review of the server found:
 - **The frontend cannot run on plain Node.** Its build imports `cloudflare:workers`, so
   the container runs the same Worker bundle on Wrangler's local runtime, which is why the
   frontend is the largest container.
+
+## Spam protection
+
+The form is protected by the honeypot, the per-address rate limit, the same-origin check,
+and, when configured, **Cloudflare Turnstile**. Turnstile is free, mostly invisible
+(it appears only if Cloudflare wants an interaction), follows the site language, and uses
+no Google tracking. It needs a free Cloudflare account to create two keys, and the page
+tells visitors the form is protected by it.
+
+- The browser renders the widget with the public site key and sends the token with the
+  inquiry. The server verifies it with Cloudflare **before** anything reaches Django, using
+  the inquiry ID as Cloudflare's idempotency key so an automatic retry can reuse the token.
+  The token is never forwarded to Django or stored.
+- It is enforced only when **both** `TURNSTILE_SITE_KEY` and `TURNSTILE_SECRET_KEY` are
+  set. Until then the site behaves as before.
+- A rejected token is the visitor's failure (403, with a bilingual message and the form
+  kept). A wrong secret key, or Cloudflare being unreachable, is a generic 503, so a
+  configuration mistake never looks like a bot.
+- Tested end to end in a browser against Cloudflare's published test keys (always-pass and
+  always-fail): success, rejection in both languages, wrong secret, the 503 retry, and keys
+  unset. Set up the real keys following [deploy/README.md](../deploy/README.md#spam-protection-cloudflare-turnstile).
 
 ## Historical and legacy data
 

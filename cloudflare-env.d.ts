@@ -6,5 +6,7 @@ declare namespace Cloudflare {
     INQUIRY_BACKEND_URL?: string;
     INQUIRY_API_KEY?: string;
     INQUIRY_ALLOWED_ORIGINS?: string;
+    TURNSTILE_SITE_KEY?: string;
+    TURNSTILE_SECRET_KEY?: string;
   }
 }

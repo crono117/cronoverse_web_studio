@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { env } from "cloudflare:workers";
 import { GoogleAnalytics } from "@/components/google-analytics";
+import { captchaSiteKey } from "@/lib/inquiry-intake";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -19,7 +20,8 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className="antialiased">
+      {/* Present only when the captcha is fully configured; the form reads it to render the widget. */}
+      <body className="antialiased" data-turnstile-sitekey={captchaSiteKey(env)}>
         {children}
         <GoogleAnalytics id={env.GA4_MEASUREMENT_ID} />
       </body>

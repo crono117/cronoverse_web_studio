@@ -106,6 +106,30 @@ stack and Caddy routing were also tested locally before that.
    shows the Django login, and a test inquiry from your own address produces two emails
    and appears in the admin. Both Xenos pages (`xenos.cronoverse.online`) should still load.
 
+## Spam protection (Cloudflare Turnstile)
+
+Optional, and off until both keys are set. It adds an invisible check to the contact form.
+
+1. In the Cloudflare dashboard (a free account is enough; your domain does not need to be on
+   Cloudflare) open **Turnstile**, choose **Add widget**, and enter `cronoverse.online` as the
+   hostname. Choose the **Managed** mode. Copy the **Site Key** and the **Secret Key**.
+2. On the server, add both to `/opt/cronoverse/.env` (use `vim` or `nano`, not a paste of
+   shell commands):
+   ```
+   TURNSTILE_SITE_KEY=<the site key>
+   TURNSTILE_SECRET_KEY=<the secret key>
+   ```
+3. Apply it by recreating only the frontend. Use the tag that is running:
+   ```sh
+   cd /opt/cronoverse && CRONOVERSE_TAG=$(docker inspect -f '{{.Config.Image}}' cronoverse-frontend-1 | cut -d: -f2) docker compose up -d frontend
+   ```
+4. Check: loading the site shows no visible widget, a submission still works, and
+   `curl -s https://cronoverse.online/ | grep -c data-turnstile-sitekey` prints `1`.
+
+If a wrong secret is entered, every submission fails with the generic "could not be saved"
+message (not "confirm you're human") and the frontend log shows `captcha_misconfigured`.
+Remove the two lines (or the secret) to turn the check off.
+
 ## Updating and rolling back
 
 ```sh
@@ -177,6 +201,7 @@ The proxy accepts plain HTTP only for loopback addresses and for dotless hostnam
 | Symptom | Check |
 | --- | --- |
 | Intermittent 503 "worker restarted mid-request" | Memory pressure on the frontend. Compare `memory.peak` and `memory.events` (`max` counts how often the limit was hit) in `/sys/fs/cgroup/system.slice/docker-<container id>.scope/`, and raise `mem_limit` in `compose.yaml`. |
+| Every submission fails after adding Turnstile keys | `docker compose logs frontend | grep captcha`. `captcha_misconfigured` means the secret key is wrong; `captcha_unavailable` means Cloudflare could not be reached from the container (the image needs `ca-certificates`, which it installs). |
 | Form shows "could not be saved" | First test the Origin check: `curl -s -X POST https://YOUR_SITE/api/inquiries -H 'Content-Type: application/json' -H 'Origin: https://YOUR_SITE' -d '{"website":"x"}'`. `Invalid origin` (403) means the site's public origin is missing from `INQUIRY_ALLOWED_ORIGINS` (it defaults to `STUDIO_URL`); `Please check your details` (400) means the origin check passed. Otherwise `docker compose logs frontend backend`. A 503 from the proxy means Django was unreachable or rejected the key; confirm both containers hold the same `INQUIRY_API_KEY`. |
 | Django 400 `DisallowedHost` | The `Host` is missing from `DJANGO_ALLOWED_HOSTS`. |
 | Caddy cannot get a certificate | DNS records must resolve to the server and ports 80 and 443 must be open (they are, for Xenos). `docker logs xenos-caddy-1`. |
