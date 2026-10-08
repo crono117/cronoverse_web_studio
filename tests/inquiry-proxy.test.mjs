@@ -62,6 +62,14 @@ test("requires HTTPS for a remote backend and permits loopback for development",
   }
   const result = await submitInquiry(request(), { ...config, INQUIRY_BACKEND_URL: "http://127.0.0.1:8000" }, async () => Response.json({ ok: true }));
   assert.equal(result.status, 200);
+  // Dotless names resolve only through private DNS (a Docker service), so HTTP is allowed there but never for dotted hosts.
+  let target = "";
+  const internal = await submitInquiry(request(), { ...config, INQUIRY_BACKEND_URL: "http://backend:8000" }, async (url) => { target = url.href; return Response.json({ ok: true }); });
+  assert.equal(internal.status, 200);
+  assert.equal(target, "http://backend:8000/api/inquiries");
+  for (const url of ["http://example.com", "http://backend.internal:8000", "http://10.120.0.4:8000", "http://user@backend:8000"]) {
+    assert.equal((await submitInquiry(request(), { ...config, INQUIRY_BACKEND_URL: url }, async () => { throw new Error("must not be contacted"); })).status, 503, url);
+  }
 });
 
 test("preserves quota and validation status codes without exposing backend details", async () => {

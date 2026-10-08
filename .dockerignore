@@ -1,0 +1,17 @@
+# Frontend image build context. Secrets, local state, and the Python backend
+# (which has its own image) stay out.
+.git
+.github
+node_modules
+dist
+.next
+.vinext
+.wrangler
+.sites-runtime
+.env*
+.dev.vars*
+*.zip
+backend
+docs
+tests
+deploy/.env

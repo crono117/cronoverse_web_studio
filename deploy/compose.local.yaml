@@ -1,0 +1,10 @@
+# Local testing only: publishes the two services on loopback so a browser can reach them.
+# On the server, leave this file out; the reverse proxy reaches the containers directly.
+#   docker compose -f deploy/compose.yaml -f deploy/compose.local.yaml up -d
+services:
+  frontend:
+    ports:
+      - "127.0.0.1:${FRONTEND_PORT:-8787}:8787"
+  backend:
+    ports:
+      - "127.0.0.1:${BACKEND_PORT:-8000}:8000"

@@ -109,6 +109,7 @@ Real Mailjet delivery and Google reporting require private server configuration.
 | `lib/analytics.ts`, `components/google-analytics.tsx` | Consent, GA4 tag, and the `generate_lead` event |
 | `tests/` | Proxy and analytics tests (`pnpm test`) |
 | `scripts/smoke-inquiries.py` | Loopback proxy, Django, and SMTP smoke test |
+| `Dockerfile`, `backend/Dockerfile`, `deploy/` | Container images, the production Compose stack, Caddy routes, and the deployment runbook |
 | `app/globals.css` | Approved styling and responsive layouts |
 | `components/capability-showcase.tsx` | Five interactive sample applications |
 | `components/dust-surface.tsx` | Canvas particle accents |

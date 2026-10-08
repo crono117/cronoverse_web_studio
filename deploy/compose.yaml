@@ -1,0 +1,110 @@
+# Cronoverse website: frontend, Django, email worker, PostgreSQL.
+#
+# Nothing here publishes a host port. TLS and ports 80/443 belong to the reverse proxy
+# that already runs on the server, which joins the `cronoverse_edge` network below and
+# routes to `frontend` and `backend` (see deploy/README.md and deploy/caddy/).
+#
+# Build on a workstation, never on the server (see deploy/ship.sh). All secrets live
+# in deploy/.env, which is ignored by Git (copy deploy/.env.example).
+name: cronoverse
+
+x-service: &service
+  restart: unless-stopped
+  init: true
+  pull_policy: never
+  logging:
+    driver: json-file
+    options: { max-size: "10m", max-file: "3" }
+
+x-django: &django
+  <<: *service
+  image: cronoverse-backend:${CRONOVERSE_TAG:-latest}
+  build: { context: ../backend }
+  env_file: .env
+  environment:
+    DATABASE_URL: postgresql://cronoverse:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in deploy/.env}@db:5432/cronoverse
+
+services:
+  frontend:
+    <<: *service
+    image: cronoverse-frontend:${CRONOVERSE_TAG:-latest}
+    build: { context: .. }
+    # The frontend sees only these three values, not the Django, database, or Mailjet secrets.
+    environment:
+      INQUIRY_BACKEND_URL: http://backend:8000
+      INQUIRY_API_KEY: ${INQUIRY_API_KEY:?Set INQUIRY_API_KEY in deploy/.env}
+      GA4_MEASUREMENT_ID: ${GA4_MEASUREMENT_ID:-}
+    mem_limit: 320m
+    networks:
+      edge: { aliases: [cronoverse-frontend] }
+    depends_on:
+      backend: { condition: service_healthy }
+
+  backend:
+    <<: *django
+    # One worker with threads keeps memory low; a landing page does not need more.
+    command: ["gunicorn", "cronoverse.wsgi:application", "--bind", "0.0.0.0:8000",
+              "--worker-class", "gthread", "--workers", "1", "--threads", "4", "--timeout", "30",
+              "--access-logfile", "-", "--access-logformat", "%(h)s %(m)s %(U)s %(s)s"]
+    mem_limit: 192m
+    networks:
+      edge: { aliases: [cronoverse-backend] }
+      data:
+    depends_on:
+      migrate: { condition: service_completed_successfully }
+    healthcheck:
+      test: ["CMD", "python", "-c",
+             "import urllib.request as u; u.urlopen(u.Request('http://127.0.0.1:8000/health/', headers={'Host': 'backend'}), timeout=4)"]
+      interval: 15s
+      timeout: 6s
+      retries: 5
+      start_period: 20s
+
+  email-worker:
+    <<: *django
+    command: ["python", "manage.py", "process_inquiry_emails"]
+    mem_limit: 128m
+    networks: [data]
+    depends_on:
+      migrate: { condition: service_completed_successfully }
+
+  migrate:
+    <<: *django
+    command: ["python", "manage.py", "migrate", "--noinput"]
+    restart: "no"
+    mem_limit: 192m
+    networks: [data]
+    depends_on:
+      db: { condition: service_healthy }
+
+  db:
+    <<: *service
+    image: postgres:17-alpine
+    pull_policy: missing
+    environment:
+      POSTGRES_DB: cronoverse
+      POSTGRES_USER: cronoverse
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in deploy/.env}
+    # Small settings for a shared 1 GB host; PostgreSQL defaults assume far more memory.
+    command: ["postgres", "-c", "shared_buffers=24MB", "-c", "max_connections=20",
+              "-c", "effective_cache_size=64MB", "-c", "work_mem=2MB",
+              "-c", "maintenance_work_mem=16MB", "-c", "wal_buffers=1MB"]
+    mem_limit: 160m
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks: [data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cronoverse -d cronoverse"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+networks:
+  # Shared with the reverse proxy: frontend and backend only.
+  edge:
+    name: cronoverse_edge
+  # Database traffic stays on its own network.
+  data:
+
+volumes:
+  postgres_data:

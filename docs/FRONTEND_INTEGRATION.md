@@ -76,7 +76,12 @@ These were found by running the integration, not by reading it.
    array. Lint now reports 0 errors (9 `<img>` advisories remain on the art).
 4. **Scripts and CI.** `test:inquiries`, `test:analytics`, and `test` were added to
    `package.json`, and `.github/workflows/frontend.yml` runs them with lint, type
-   check, build, and the loopback SMTP smoke.
+   check, build, the loopback SMTP smoke, and the Docker image builds.
+5. **Internal hostnames.** The proxy accepted plain HTTP only for loopback addresses, so a
+   Docker service URL such as `http://backend:8000` was rejected. It now also accepts
+   dotless hostnames, which only private DNS can resolve. Dotted hosts, bare IP
+   addresses, and credentialed URLs still require HTTPS, and the existing proxy test
+   covers each case.
 
 ## Request flow
 
@@ -90,6 +95,8 @@ Browser ──POST /api/inquiries──▶ Worker route ──POST /api/inquirie
   `INQUIRY_BACKEND_URL`. Nothing uses a `VITE_*` or `NEXT_PUBLIC_*` variable.
 - A filled honeypot, wrong origin, bad JSON, oversize body, or wrong service value
   is rejected before Django is contacted.
+- `INQUIRY_BACKEND_URL` must be HTTPS, loopback, or a dotless private name such as
+  `http://backend:8000`.
 - A missing or unreachable backend returns 503 and keeps the form filled.
   There is no D1 fallback and no dual write.
 - An unchanged retry reuses the form's UUID and gets 200; edited content gets a
@@ -148,6 +155,9 @@ throwaway PostgreSQL 16 container for the concurrency tests.
 | `pnpm lint` | 0 errors, 9 `<img>` warnings |
 | `pnpm build` | succeeds |
 | `scripts/smoke-inquiries.py` | passes: proxy 201 then 200, one inquiry, two multipart emails, no duplicate sends |
+| Docker images | both build from a clean context (frontend about 630 MB, backend about 420 MB) |
+| Container stack, production Django settings | all four services healthy; 201/200/409/400/403 as above through the containerised proxy; four emails sent to a local SMTP sink; data survives `down`/`up`; a stopped backend gives a clean 503 and recovers |
+| Caddy routing | the real route file passes `caddy validate` on the droplet's Caddy version; routing to both containers, the `www` redirect, and Django's host check work on the shared network |
 
 Live run (built Worker and `pnpm dev`, Django, and the worker with console mail):
 
@@ -203,7 +213,37 @@ Measured with Chromium at 1440×900 and 375×812 (2x touch):
   the owner's credentials.
 - The scene cycle's timing (opening scene, random scenes, hover pause) was not
   re-timed; the engine is unchanged from the approved branch.
-- `docker compose` was not run. A throwaway PostgreSQL container was used for the tests.
+- Nothing was deployed to the droplet: no DNS change, certificate issuance, or real
+  Mailjet send, and the Xenos Caddy was not modified. The Docker stack and Caddy routing
+  were tested locally only.
+
+## Running in Docker on the cloud server
+
+`Dockerfile` (frontend) and `backend/Dockerfile` build the two images, and
+`deploy/compose.yaml` runs the frontend, Django, the email worker, and PostgreSQL with no
+published ports, beside the existing Xenos stack behind its Caddy. Images are built on a
+workstation and streamed over SSH by `deploy/ship.sh`; the 1 GB droplet never builds.
+The step-by-step runbook, rollback, backups, and troubleshooting are in
+[deploy/README.md](../deploy/README.md). This was tested locally and **not yet run on the
+droplet**.
+
+What the review of the server found:
+
+- **Memory is the constraint.** The stack measured about 400 MiB at steady state
+  (frontend 233, backend 83, worker 63, database 21). The droplet (1 vCPU, 1 GB) had about
+  347 MiB available and 268 MiB of swap in use, with a load average near zero. Resize it
+  to 2 GB first, or keep the frontend elsewhere and run only Django, the worker, and the
+  database (about 170 MiB) on it.
+- **Ports 80 and 443 belong to the Xenos Caddy.** The new routes are added with an
+  untracked Compose override and a combined Caddyfile that imports the original
+  unchanged, so no tracked Xenos file is edited and the change is one file to undo.
+- **Outbound SMTP on 587, 465, and 25 times out from the droplet; port 2525 works**
+  (a STARTTLS handshake with Mailjet succeeded, with no credentials or mail sent). The
+  deploy settings use `EMAIL_PORT=2525`. The original instructions' port 587 would have
+  sent nothing from this server.
+- **The frontend cannot run on plain Node.** Its build imports `cloudflare:workers`, so
+  the container runs the same Worker bundle on Wrangler's local runtime, which is why the
+  frontend is the largest container.
 
 ## Historical and legacy data
 
@@ -246,16 +286,16 @@ against a copy of the data first.
 
 Nothing below was done, and none of it is in Git.
 
-1. **Python host.** Deploy `backend/` (web and worker) on an HTTPS host with
-   PostgreSQL, per [DJANGO_BACKEND.md](DJANGO_BACKEND.md). A GitHub push does not
-   deploy it or the Site.
+1. **Python host.** Deploy the Docker stack per [deploy/README.md](../deploy/README.md)
+   (or `backend/` alone per [DJANGO_BACKEND.md](DJANGO_BACKEND.md)), after resizing the
+   shared droplet. A GitHub push does not deploy it or the Site.
 2. **Frontend runtime settings.** Set `INQUIRY_BACKEND_URL` (HTTPS origin, no path)
    and the secret `INQUIRY_API_KEY` on the hosted Site, and the same key in Django,
    **before** publishing this frontend. Without them every inquiry returns 503.
 3. **Mailjet.** Validate `cronoverse.online` or the sender, add the SPF and DKIM
    records without a second SPF record, supply the SMTP API key and secret as server
-   secrets, select the SMTP backend, create the `info@` alias, and send a test to the
-   owner's own address.
+   secrets, select the SMTP backend on **port 2525** when deploying on DigitalOcean,
+   create the `info@` alias, and send a test to the owner's own address.
 4. **GA4.** Create the property and Web stream, turn off Enhanced measurement, set
    `GA4_MEASUREMENT_ID` on the frontend, and set the numeric `GA4_PROPERTY_ID` and the
    service-account credential on Django ([GOOGLE_ANALYTICS.md](GOOGLE_ANALYTICS.md)).

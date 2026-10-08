@@ -1,0 +1,13 @@
+# Optional: mounts the read-only Google Analytics reporting credential into the backend.
+# Keep the JSON outside any checkout and set GA4_CREDENTIALS_SOURCE_FILE in deploy/.env.
+#   docker compose -f compose.yaml -f compose.analytics.yaml up -d
+services:
+  backend:
+    environment:
+      GOOGLE_APPLICATION_CREDENTIALS: /run/secrets/google_analytics_credentials
+    secrets:
+      - google_analytics_credentials
+
+secrets:
+  google_analytics_credentials:
+    file: ${GA4_CREDENTIALS_SOURCE_FILE:?Set the absolute credential path in deploy/.env}

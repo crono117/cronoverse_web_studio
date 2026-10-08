@@ -50,8 +50,11 @@ function backendEndpoint(config: InquiryBackendConfig) {
   if (!config.INQUIRY_BACKEND_URL || !config.INQUIRY_API_KEY) throw new Error("Missing backend configuration");
   const url = new URL(config.INQUIRY_BACKEND_URL);
   const local = ["localhost", "127.0.0.1", "[::1]"].includes(url.hostname);
+  // A dotless name such as "backend" can only come from private DNS (a Docker or
+  // Kubernetes service on the same host), never a public site, so plain HTTP is allowed.
+  const privateService = /^[a-z0-9][a-z0-9_-]*$/i.test(url.hostname);
   if (
-    (url.protocol !== "https:" && !(local && url.protocol === "http:"))
+    (url.protocol !== "https:" && !((local || privateService) && url.protocol === "http:"))
     || url.username || url.password || url.search || url.hash || url.pathname !== "/"
   ) throw new Error("Invalid backend configuration");
   return new URL("/api/inquiries", url);

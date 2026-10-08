@@ -1,0 +1,5 @@
+# Loaded by the server's existing Caddy in place of its own Caddyfile. The original
+# Xenos config is mounted unchanged at /etc/caddy/xenos.caddy; nothing in that
+# repository is edited. Removing the override file restores the previous setup.
+import /etc/caddy/xenos.caddy
+import /etc/caddy/cronoverse.caddy

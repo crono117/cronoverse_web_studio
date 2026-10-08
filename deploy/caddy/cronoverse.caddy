@@ -1,0 +1,19 @@
+# Routes for the Cronoverse website, for a Caddy that already owns ports 80 and 443.
+# Add these blocks to that Caddy's config (or `import` this file), attach the Caddy
+# container to the `cronoverse_edge` network, then validate and reload gracefully.
+# See deploy/README.md. Certificates are issued automatically once the DNS records exist.
+
+cronoverse.online {
+	encode gzip
+	reverse_proxy cronoverse-frontend:8787
+}
+
+www.cronoverse.online {
+	redir https://cronoverse.online{uri} permanent
+}
+
+# Django admin and the shared-key inquiry API. Django sets its own security headers.
+admin.cronoverse.online {
+	encode gzip
+	reverse_proxy cronoverse-backend:8000
+}

@@ -1,0 +1,18 @@
+# Copy to /opt/xenos/app/docker-compose.override.yml on the server (Compose merges it
+# automatically; the Xenos repository's tracked files stay untouched), then:
+#   cd /opt/xenos/app && docker compose up -d caddy
+# That recreates only the Caddy container (a few seconds of downtime; certificates live
+# in the caddy-data volume). To undo, delete the override file and run the same command.
+services:
+  caddy:
+    networks: [internal, cronoverse_edge]
+    volumes:
+      # Same target as the original Caddyfile mount, so this entry replaces it...
+      - /opt/cronoverse/caddy/Caddyfile.shared:/etc/caddy/Caddyfile:ro
+      # ...and the original file is mounted unchanged beside it and imported.
+      - ./deploy/caddy/Caddyfile:/etc/caddy/xenos.caddy:ro
+      - /opt/cronoverse/caddy/cronoverse.caddy:/etc/caddy/cronoverse.caddy:ro
+networks:
+  # Created by the Cronoverse stack (deploy/compose.yaml); it must be running first.
+  cronoverse_edge:
+    external: true
