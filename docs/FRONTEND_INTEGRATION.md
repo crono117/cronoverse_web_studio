@@ -213,9 +213,10 @@ Measured with Chromium at 1440×900 and 375×812 (2x touch):
   the owner's credentials.
 - The scene cycle's timing (opening scene, random scenes, hover pause) was not
   re-timed; the engine is unchanged from the approved branch.
-- Nothing was deployed to the droplet: no DNS change, certificate issuance, or real
-  Mailjet send, and the Xenos Caddy was not modified. The Docker stack and Caddy routing
-  were tested locally only.
+- A real Mailjet send has not been verified: the sender or domain must be verified in
+  Mailjet and SPF/DKIM added, and a test inquiry from the owner's own address confirms
+  the two emails. The Google Analytics IDs are not configured.
+- No inquiry has been submitted on the live site yet.
 
 ## Running in Docker on the cloud server
 
@@ -224,8 +225,14 @@ Measured with Chromium at 1440×900 and 375×812 (2x touch):
 published ports, beside the existing Xenos stack behind its Caddy. Images are built on a
 workstation and streamed over SSH by `deploy/ship.sh`; the 1 GB droplet never builds.
 The step-by-step runbook, rollback, backups, and troubleshooting are in
-[deploy/README.md](../deploy/README.md). This was tested locally and **not yet run on the
-droplet**.
+[deploy/README.md](../deploy/README.md).
+
+**Deployed 2026-10-07** to the Xenos droplet after resizing it to 2 GB (the disk grew to
+50 GB because the keep-storage-fixed option was not applied, so it cannot be downsized).
+Live at `https://cronoverse.online` (with `www` redirecting), Django admin at
+`https://admin.cronoverse.online/admin/`, all with Let's Encrypt certificates. After
+the deploy the stack used about 400 MiB, the host had about 920 MiB free, swap was
+barely touched, and the Xenos engine, dashboard, and health endpoint were unaffected.
 
 What the review of the server found:
 

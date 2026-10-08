@@ -29,7 +29,7 @@ docker compose -f deploy/compose.yaml build frontend backend
 echo "Streaming images to $DEPLOY_HOST (this can take a minute)"
 docker save "cronoverse-frontend:$tag" "cronoverse-backend:$tag" | gzip | ssh "${ssh_opts[@]}" "$DEPLOY_HOST" 'gunzip | docker load'
 
-ssh "${ssh_opts[@]}" "$DEPLOY_HOST" "mkdir -p '$DEPLOY_DIR'"
+ssh "${ssh_opts[@]}" "$DEPLOY_HOST" "mkdir -p '$DEPLOY_DIR' && chmod 700 '$DEPLOY_DIR'"
 scp "${ssh_opts[@]}" deploy/compose.yaml deploy/compose.analytics.yaml "$DEPLOY_HOST:$DEPLOY_DIR/"
 scp -r "${ssh_opts[@]}" deploy/caddy "$DEPLOY_HOST:$DEPLOY_DIR/"
 

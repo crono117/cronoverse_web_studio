@@ -48,15 +48,19 @@ server**: a build can exhaust memory and take the neighbouring service down with
 
 ## One-time setup
 
-Commands run on your workstation unless marked *(server)*. Nothing below has been run
-against the real server yet; the stack and the Caddy routing were tested locally.
+Commands run on your workstation unless marked *(server)*. These are the steps that
+were run to deploy to the Xenos droplet on 2026-10-07 (resized to 2 GB first). The
+stack and Caddy routing were also tested locally before that.
 
 1. **Resize and snapshot.** In the DigitalOcean console, take a snapshot, then resize
    the droplet to 2 GB choosing *CPU and RAM only* (the disk stays the same, so you can
    resize back). The droplet powers off for a few minutes, so other services restart.
 2. **DNS.** At the DNS host add A records for `cronoverse.online`, `www`, and `admin`
    pointing at the server. Leave the existing mail records alone. Certificates are issued
-   automatically by Caddy once the records resolve.
+   automatically by Caddy once the records resolve. A computer that looked the names up
+   before the records existed may keep the old "does not exist" answer for a while and
+   fail to connect; check against `dig @1.1.1.1` or force the address with
+   `curl --resolve host:443:SERVER_IP`.
 3. **Settings** *(server)*. Create the deploy directory and the env file, then fill it in.
    Generate each secret separately (see the comments in the file):
    ```sh
@@ -66,6 +70,16 @@ against the real server yet; the stack and the Caddy routing were tested locally
    ```
    Set `INQUIRY_API_KEY`, `DJANGO_SECRET_KEY`, `POSTGRES_PASSWORD`, the Mailjet keys, and
    `GA4_MEASUREMENT_ID` when you have it. Keep `EMAIL_PORT=2525` (see Email below).
+
+   Two pitfalls from the real deployment: shell commands belong in the shell, and pasting
+   them into the editor writes them into `.env` as text, which stops Compose reading the
+   file. The file may contain only `NAME=value` lines. And check it without printing the
+   secrets (every secret should show `set`, and the mode should be `600`):
+   ```sh
+   stat -c '%a' .env; grep -c -v -E '^[A-Z0-9_]+=' .env   # expect 600, then 0
+   for k in INQUIRY_API_KEY DJANGO_SECRET_KEY POSTGRES_PASSWORD EMAIL_HOST_USER EMAIL_HOST_PASSWORD; do
+     grep -q "^$k=." .env && echo "$k: set" || echo "$k: EMPTY"; done
+   ```
 4. **First deploy.** Builds here, loads the images on the server, and starts the stack:
    ```sh
    DEPLOY_HOST=root@SERVER DEPLOY_KEY=~/.ssh/YOUR_KEY deploy/ship.sh --up
