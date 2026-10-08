@@ -123,8 +123,13 @@ Optional, and off until both keys are set. It adds an invisible check to the con
    ```sh
    cd /opt/cronoverse && CRONOVERSE_TAG=$(docker inspect -f '{{.Config.Image}}' cronoverse-frontend-1 | cut -d: -f2) docker compose up -d frontend
    ```
-4. Check: loading the site shows no visible widget, a submission still works, and
-   `curl -s https://cronoverse.online/ | grep -c data-turnstile-sitekey` prints `1`.
+4. Check: a submission still works, and the page's `<body>` tag now carries the key (the
+   word also appears in the page's script data even when the check is off, so look at the tag):
+   ```sh
+   curl -s https://cronoverse.online/ | grep -o '<body[^>]*>'
+   ```
+   It shows `data-turnstile-sitekey="..."` when the check is on and only `class="antialiased"`
+   when it is off. Visitors normally see no widget at all.
 
 If a wrong secret is entered, every submission fails with the generic "could not be saved"
 message (not "confirm you're human") and the frontend log shows `captcha_misconfigured`.
