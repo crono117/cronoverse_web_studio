@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, type CSSProperties } from "react";
+import { isMotionPaused, onMotionChange } from "@/lib/motion";
 
 type Variant = "badge" | "button" | "panel" | "line";
 type Fume = { x: number; y: number; size: number; offset: number; life: number; seed: number; lift: number; drift: number; side: boolean };
@@ -38,7 +39,10 @@ export function DustSurface({ variant = "badge", color = "var(--electric)", phas
       ctx.globalAlpha = 1;
       // The surface never erodes. Only independently emitted blocks dissipate.
       ctx.fillRect(0, 0, width, height);
+      // Reduced motion asked for: draw half the particles and move at half speed (see lib/motion.ts).
+      let drawn = 0;
       for (const fume of fumes) {
+        if (motion.matches && (drawn++ & 1)) continue;
         const age = (time / fume.life + fume.offset) % 1;
         const rise = Math.pow(age, 1.12);
         const curl = (Math.sin(time * .72 + fume.x * .027) + Math.sin(time * .39 + fume.seed)) * age;
@@ -110,16 +114,16 @@ export function DustSurface({ variant = "badge", color = "var(--electric)", phas
       el.style.left = `${-padX}px`;
       el.style.top = `${-padY}px`;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      paint(motion.matches);
+      paint(isMotionPaused());
       host.dataset.ready = "true";
     }
 
     function animate(now: number) {
       frame = 0;
-      if (stopped || !visible || document.hidden || motion.matches) return;
+      if (stopped || !visible || document.hidden || isMotionPaused()) return;
       if (now - lastPaint >= 1000 / 30) {
         const dt = lastTime ? Math.min((now - lastTime) / 1000, .06) : 0;
-        clock += dt * (1 + hover);
+        clock += dt * (motion.matches ? .5 : 1 + hover);
         lastTime = now;
         lastPaint = now;
         hover += (targetHover - hover) * .09;
@@ -131,7 +135,7 @@ export function DustSurface({ variant = "badge", color = "var(--electric)", phas
       cancelAnimationFrame(frame);
       frame = 0;
       lastTime = 0;
-      if (motion.matches) paint(true);
+      if (isMotionPaused()) paint(true);
       else if (visible && !document.hidden && !stopped) frame = requestAnimationFrame(animate);
     }
     const enter = () => { targetHover = .28; };
@@ -147,7 +151,9 @@ export function DustSurface({ variant = "badge", color = "var(--electric)", phas
     parent.addEventListener("focusout", leave);
     motion.addEventListener("change", sync);
     document.addEventListener("visibilitychange", sync);
+    const offMotion = onMotionChange(sync);
     return () => {
+      offMotion();
       stopped = true;
       cancelAnimationFrame(frame);
       resizeObserver.disconnect(); observer.disconnect();

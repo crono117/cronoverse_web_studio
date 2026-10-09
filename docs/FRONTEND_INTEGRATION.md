@@ -99,6 +99,19 @@ These were found by running the integration, not by reading it.
    system's certificate store, which the slim Node base image lacks (Node ships its own,
    which hid the problem), so every outbound HTTPS call from the site failed. Nothing
    needed one until the captcha; the image now installs `ca-certificates`.
+9. **Motion policy.** The hero art stopped completely whenever the browser reported "reduce
+   motion". Windows reports that whenever its animation effects are off, which happens on
+   remote desktops, virtual machines, battery saver, and low-power laptops without the
+   visitor choosing it, so many Windows visitors saw a still hero. The live site animated
+   correctly under every Windows-like condition tested (100, 125, and 150% scaling,
+   software rendering); only the reduced-motion signal produced a still hero. The policy
+   (`lib/motion.ts`) is now: animate unless the visitor paused it. When reduced motion is
+   requested the effects run calmly (half speed, half the particles, no flying tile bursts on
+   the causeway, the soft scene crossfade kept) and a visible Pause/Play button on the art
+   stops everything, including the scene cycle. The choice is remembered. The same policy
+   covers the dust shimmer on the buttons. Tested in a browser: normal, reduced-motion (49%
+   of the particle coverage), pause, reload persistence, keyboard, and layout in both
+   languages at desktop, tablet, and phone widths. The interactive showcase is unchanged.
 
 ## Request flow
 
@@ -205,8 +218,9 @@ Live run (built Worker and `pnpm dev`, Django, and the worker with console mail)
 
 Measured with Chromium at 1440×900 and 375×812 (2x touch):
 
-- The art changes over time with motion on, and is byte-identical across three
-  seconds with `prefers-reduced-motion: reduce` on desktop and mobile.
+- The art animates with motion on, and under `prefers-reduced-motion: reduce` it still
+  animates, calmly (see the motion policy below). Pausing makes it byte-identical across
+  time, on desktop and mobile.
 - No horizontal scroll at 375px. The Spanish label ("EN OTRO LUGAR") and caption
   do not overlap.
 - The language chip and tag line sit in the copy column and follow the language
@@ -216,11 +230,11 @@ Measured with Chromium at 1440×900 and 375×812 (2x touch):
 | --- | --- |
 | ![Hero, desktop English](screenshots/hero-desktop-en.jpg) | ![Hero, desktop Spanish](screenshots/hero-desktop-es.jpg) |
 
-| Causeway building | Reduced motion |
+| Causeway building | Reduced motion (calm mode, with the pause button) |
 | --- | --- |
 | ![Hero, causeway building](screenshots/hero-desktop-en-causeway-building.jpg) | ![Hero, reduced motion](screenshots/hero-desktop-reduced-motion.jpg) |
 
-| Mobile, English | Mobile, Spanish | Mobile, reduced motion |
+| Mobile, English | Mobile, Spanish | Mobile, reduced motion (calm mode) |
 | --- | --- | --- |
 | ![Hero, mobile English](screenshots/hero-mobile-en.jpg) | ![Hero, mobile Spanish](screenshots/hero-mobile-es.jpg) | ![Hero, mobile reduced motion](screenshots/hero-mobile-reduced-motion.jpg) |
 

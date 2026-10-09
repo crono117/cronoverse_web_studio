@@ -4,40 +4,46 @@
    - weather():  stars / rain overlay per scene
    - causeway(): scene F causeway build → alive → retrace
    - dust():     same effect as components/dust-surface.tsx (kept for parity; the site still uses DustSurface)
-   All effects: 30fps, pause offscreen / hidden tab, honour prefers-reduced-motion.
+   All effects: 30fps, pause offscreen / hidden tab. Motion policy (lib/motion.ts): animate unless the
+   visitor paused it; when the OS asks for reduced motion, run gently (half speed, half the particles,
+   no causeway tile bursts) instead of stopping.
    Coordinates are in the artwork's 1254×1254 pixel space; every scene image shares that framing. */
+import { isMotionPaused, onMotionChange, prefersReducedMotion } from "@/lib/motion";
 const rnd = n => { const v = Math.sin(n * 127.1 + 311.7) * 43758.5453; return v - Math.floor(v); };
 
-// Shared clock: 30fps, pauses offscreen / hidden tab, honors reduced motion, speeds up on hover.
+// Shared clock: 30fps, pauses offscreen / hidden tab / when the visitor pauses it, speeds up on hover.
+// With reduced motion requested it runs at half speed and tells paint() to draw fewer particles.
 function run(host, hoverTarget, paint, resize, speed = 1) {
   const motion = matchMedia("(prefers-reduced-motion: reduce)");
   let frame = 0, lastPaint = 0, lastTime = 0, clock = 1.2, visible = false, hover = 0, targetHover = 0, stopped = false;
   function animate(now) {
     frame = 0;
-    if (stopped || !visible || document.hidden || motion.matches) return;
+    if (stopped || !visible || document.hidden || isMotionPaused()) return;
     if (now - lastPaint >= 1000 / 30) {
       const dt = lastTime ? Math.min((now - lastTime) / 1000, .06) : 0;
-      clock += dt * (1 + hover) * speed; lastTime = now; lastPaint = now;
+      const gentle = motion.matches;
+      clock += dt * (gentle ? .5 : 1 + hover) * speed; lastTime = now; lastPaint = now;
       hover += (targetHover - hover) * .09;
-      paint(clock);
+      paint(clock, false, gentle);
     }
     frame = requestAnimationFrame(animate);
   }
   function sync() {
     cancelAnimationFrame(frame); frame = 0; lastTime = 0;
-    if (motion.matches) paint(2.4, true);
+    if (isMotionPaused()) paint(2.4, true);
     else if (visible && !document.hidden && !stopped) frame = requestAnimationFrame(animate);
   }
   const enter = () => { targetHover = .28; }, leave = () => { targetHover = 0; };
   const io = new IntersectionObserver(([e]) => { visible = e.isIntersecting; sync(); }, { rootMargin: "40px" });
-  const ro = new ResizeObserver(() => { resize(); paint(clock, motion.matches); });
-  resize(); paint(clock, motion.matches);
+  const ro = new ResizeObserver(() => { resize(); paint(clock, isMotionPaused(), motion.matches); });
+  resize(); paint(clock, isMotionPaused(), motion.matches);
   ro.observe(host); io.observe(host);
   hoverTarget.addEventListener("pointerenter", enter); hoverTarget.addEventListener("pointerleave", leave);
   hoverTarget.addEventListener("focusin", enter); hoverTarget.addEventListener("focusout", leave);
   motion.addEventListener("change", sync); document.addEventListener("visibilitychange", sync);
+  const offMotion = onMotionChange(sync);
   return () => {
-    stopped = true; cancelAnimationFrame(frame); ro.disconnect(); io.disconnect();
+    stopped = true; cancelAnimationFrame(frame); ro.disconnect(); io.disconnect(); offMotion();
     hoverTarget.removeEventListener("pointerenter", enter); hoverTarget.removeEventListener("pointerleave", leave);
     hoverTarget.removeEventListener("focusin", enter); hoverTarget.removeEventListener("focusout", leave);
     motion.removeEventListener("change", sync); document.removeEventListener("visibilitychange", sync);
@@ -98,12 +104,14 @@ function dust(host, { variant = "badge", color = "#62c5ff", phase = 0 } = {}) {
     sizeCanvas(el, ctx, width + padX * 2, height + padY * 2, -padX, -padY);
     host.dataset.ready = "true";
   }
-  function paint(clock, still) {
+  function paint(clock, still, gentle) {
     const time = still ? phase + 2.4 : clock + phase;
     ctx.clearRect(0, 0, width + padX * 2, height + padY * 2);
     ctx.save(); ctx.translate(padX, padY); ctx.fillStyle = color; ctx.globalAlpha = 1;
     ctx.fillRect(0, 0, width, height);
+    let n = 0;
     for (const f of fumes) {
+      if (gentle && (n++ & 1)) continue;
       const age = (time / f.life + f.offset) % 1, rise = Math.pow(age, 1.12);
       const curl = (Math.sin(time * .72 + f.x * .027) + Math.sin(time * .39 + f.seed)) * age;
       const x = f.x + rise * f.drift + curl * (f.side ? 2 : 5), y = f.y - rise * f.lift;
@@ -169,11 +177,13 @@ function palms(host, { phase = 0, density = 1, speed = 1, glow = true, objectPos
     sizeCanvas(el, ctx, W, H, 0, 0);
     host.dataset.ready = "true";
   }
-  function paint(clock, still) {
+  function paint(clock, still, gentle) {
     const time = still ? phase + 2.4 : clock + phase;
     ctx.clearRect(0, 0, W, H);
     const gs = Math.max(.6, s * 2.1);
+    let n = 0;
     for (const f of fumes) {
+      if (gentle && (n++ & 1)) continue;
       const t = time / f.life + f.offset, age = t % 1, rise = Math.pow(age, 1.1);
       const cyc = Math.floor(t);
       if (cyc !== f.cyc) { // re-colour only when a block respawns, so scene changes bleed in gradually
@@ -221,7 +231,7 @@ function weather(host, { objectPosition = [.5, .42] } = {}) {
     m = artMap(host, W, H, objectPosition);
     sizeCanvas(el, ctx, W, H, 0, 0);
   }
-  function paint(time, still) {
+  function paint(time, still, gentle) {
     for (const k of keys) amt[k] = still ? target[k] : amt[k] + (target[k] - amt[k]) * .06;
     ctx.clearRect(0, 0, W, H); ctx.globalAlpha = 1; ctx.globalCompositeOperation = "source-over";
     const sunX = m.ox + 648 * m.s, sunY = m.oy + 705 * m.s;
@@ -251,13 +261,15 @@ function weather(host, { objectPosition = [.5, .42] } = {}) {
     }
     if (amt.rain > .01) {
       ctx.strokeStyle = "#c9dcff"; ctx.lineWidth = 1;
+      let n = 0;
       for (const d of drops) {
+        if (gentle && (n++ & 1)) continue;
         const y = ((d.y + time * d.v * .9) % 1) * (H + 40) - 20, x = ((d.x - time * d.v * .08) % 1 + 1) % 1 * (W + 40) - 20;
         ctx.globalAlpha = amt.rain * d.a;
         ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x - d.len * .22, y + d.len); ctx.stroke();
       }
     }
-    if (amt.storm > .01) {
+    if (amt.storm > .01 && !gentle) {
       const period = 2.9, idx = Math.floor(time / period), ph = (time % period) / period;
       if (rnd(idx + 5) < .55) {
         const f = ph < .025 ? .5 : ph < .045 ? .08 : ph < .07 ? .32 : 0;
@@ -271,7 +283,7 @@ function weather(host, { objectPosition = [.5, .42] } = {}) {
     for (const k of keys) target[k] = (sc.weather && sc.weather[k]) || 0;
     if (sc.bloomColor) bloomColor = sc.bloomColor;
     if (sc.hazeColor) hazeColor = sc.hazeColor;
-    if (matchMedia("(prefers-reduced-motion: reduce)").matches) paint(2.4, true);
+    if (isMotionPaused()) paint(2.4, true);
   };
   return stop;
 }
@@ -298,7 +310,9 @@ function causeway(host, img, { objectPosition = [.5, .42] } = {}) {
       drift: (rnd(s + 7) - .5) * 16 + (edge ? (side ? -6 : 6) : 0), size: 4 + Math.floor(rnd(s + 8) * 3) * 3,
       color: LIVE[Math.floor(rnd(s + 9) * LIVE.length)] };
   });
-  const reduced = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
+  // Paused: show the built causeway, still. Reduced motion (not paused): skip the flying tile bursts
+  // and show the built causeway with gentle fumes instead.
+  const paused = () => isMotionPaused();
   function build() {
     cover = document.createElement("canvas"); cover.width = ART; cover.height = ART;
     const c = cover.getContext("2d"), k = img.naturalWidth / ART;
@@ -375,9 +389,11 @@ function causeway(host, img, { objectPosition = [.5, .42] } = {}) {
   }
   function drawWisps(e) {
     const bEnd = plan.delay + plan.build, rStart = bEnd + plan.hold;
-    const vb = visBot();
+    const vb = visBot(), gentle = prefersReducedMotion();
+    let n = 0;
     for (const w of wisps) {
       if (w.y > vb) continue;
+      if (gentle && (n++ & 1)) continue;
       const pos = Math.min(1, Math.max(0, (w.y - TOP) / (vb - TOP)));
       const builtAt = plan.delay + (pos * .7 + .2 + .3) * plan.build;
       const age = ((e / w.life) + w.offset) % 1, born = e - age * w.life;
@@ -417,16 +433,24 @@ function causeway(host, img, { objectPosition = [.5, .42] } = {}) {
   const ro = new ResizeObserver(resize);
   resize(); ro.observe(host);
   if (img.complete && img.naturalWidth) build(); else img.addEventListener("load", build, { once: true });
+  const offMotion = onMotionChange(() => {
+    if (!isMotionPaused()) return;
+    cancelAnimationFrame(raf);
+    if (state === "playing") state = "shown";
+    render();
+  });
   return {
     cover() { cancelAnimationFrame(raf); state = "covered"; render(); },
     // delay → build (door→shore) → hold → retrace (shore→door), all in seconds.
     play(p) {
       cancelAnimationFrame(raf);
-      if (reduced()) { state = "shown"; render(); return; }
-      plan = { delay: 1, build: 3, hold: 5, retract: 5, ...p };
+      if (paused()) { state = "shown"; render(); return; }
+      plan = prefersReducedMotion()
+        ? { delay: -999, build: 1, hold: 9999, retract: 1 }   // already built, gentle fumes for the whole scene
+        : { delay: 1, build: 3, hold: 5, retract: 5, ...p };
       state = "playing"; t0 = performance.now(); raf = requestAnimationFrame(loop);
     },
-    stop() { cancelAnimationFrame(raf); ro.disconnect(); },
+    stop() { cancelAnimationFrame(raf); ro.disconnect(); offMotion(); },
   };
 }
 

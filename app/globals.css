@@ -224,3 +224,13 @@ html[lang=es] .hero h1{font-size:clamp(52px,5.7vw,84px);letter-spacing:-3px}
 
 /* Cloudflare Turnstile stays hidden unless it needs the visitor; give it room when it does show. */
 .captcha-slot:not(:empty) { margin: 4px 0 14px; }
+
+/* Pause / play for the hero motion (see lib/motion.ts). Sits left of the compass, top right of the art. */
+.motion-toggle { position: absolute; z-index: 3; top: 16px; right: 60px; display: grid; place-items: center; width: 34px; height: 34px; padding: 0; color: #dfe8f7; background: rgba(7, 13, 26, .58); border: 1px solid rgba(185, 230, 255, .55); border-radius: 50%; cursor: pointer; transition: background .2s ease, border-color .2s ease; }
+.motion-toggle:hover { background: rgba(7, 13, 26, .85); border-color: #62c5ff; }
+.motion-toggle:focus-visible { outline: 2px solid #62c5ff; outline-offset: 3px; }
+/* Visitors whose system asks for reduced motion get the calm hero, so keep its soft scene crossfade
+   (opacity only, no movement) even though other transitions are switched off. */
+@media (prefers-reduced-motion: reduce) {
+  .hero-visual > img, .hero-visual > div[aria-hidden="true"], .hero-visual > span[aria-hidden="true"] { transition: opacity 1.2s ease !important; }
+}

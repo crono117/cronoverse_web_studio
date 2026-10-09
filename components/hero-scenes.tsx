@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Compass } from "lucide-react";
+import { Compass, Pause, Play } from "lucide-react";
 import { palms, weather, causeway, SCENES } from "@/lib/cronoverse-fumes";
+import { isMotionPaused, onMotionChange, setMotionPaused } from "@/lib/motion";
 
 /* Hero artwork with the day / weather cycle.
    Render as the ONLY child content of .hero-visual (it returns a fragment so the existing
@@ -32,9 +33,17 @@ export function HeroScenes({
   rainSeconds = 4, rainChance = .12, causewaySeconds = 3, retraceSeconds = 5, dayTint = .35, surrealTint = .35,
 }: Props) {
   const [scene, setScene] = useState(0);
+  const [paused, setPaused] = useState(false);
   const palmRef = useRef<HTMLSpanElement>(null), weatherRef = useRef<HTMLSpanElement>(null);
   const causewayRef = useRef<HTMLSpanElement>(null), surrealImg = useRef<HTMLImageElement>(null);
   const fx = useRef<{ palms?: any; weather?: any; causeway?: any }>({});
+
+  // The Pause/Play button reflects the shared motion state (restored from the visitor's last choice).
+  useEffect(() => {
+    const sync = () => setPaused(isMotionPaused());
+    sync();
+    return onMotionChange(sync);
+  }, []);
 
   // Effects mount once.
   useEffect(() => {
@@ -76,7 +85,7 @@ export function HeroScenes({
     };
     function schedule() {
       clearTimeout(timer);
-      if (hovering) return;
+      if (hovering || isMotionPaused()) return;
       timer = window.setTimeout(() => {
         let next = 0;
         if (cur === 0 || randomsShown < randomCount) {
@@ -88,9 +97,11 @@ export function HeroScenes({
     const enter = () => { hovering = true; clearTimeout(timer); };
     const leave = () => { hovering = false; schedule(); };
     hero?.addEventListener("pointerenter", enter); hero?.addEventListener("pointerleave", leave);
+    // Pausing also freezes the scene cycle on the current scene; resuming starts the timer again.
+    const offMotion = onMotionChange(() => { if (isMotionPaused()) clearTimeout(timer); else schedule(); });
 
     if (startScene > 0) { randomsShown = 1; lastRandom = startScene; show(startScene); } else schedule();
-    return () => { clearTimeout(timer); hero?.removeEventListener("pointerenter", enter); hero?.removeEventListener("pointerleave", leave); };
+    return () => { offMotion(); clearTimeout(timer); hero?.removeEventListener("pointerenter", enter); hero?.removeEventListener("pointerleave", leave); };
   }, [startScene, eveningSeconds, randomSeconds, randomCount, rainSeconds, rainChance, causewaySeconds, retraceSeconds]);
 
   const op = (i: number) => (scene === i ? 1 : 0);
@@ -111,6 +122,11 @@ export function HeroScenes({
       <span className="photo-top-stack">{lang === "es" ? <span>SUR DE<br/>CALIFORNIA</span> : <span>SOUTHERN<br/>CALIFORNIA</span>}<span className="photo-code">SC / 01</span></span>
       <Compass size={28} strokeWidth={1}/>
     </div>
+    <button type="button" className="motion-toggle" onClick={() => setMotionPaused(!isMotionPaused(), true)}
+      aria-label={paused ? (lang === "es" ? "Reproducir animación" : "Play animation") : (lang === "es" ? "Pausar animación" : "Pause animation")}
+      title={paused ? (lang === "es" ? "Reproducir animación" : "Play animation") : (lang === "es" ? "Pausar animación" : "Pause animation")}>
+      {paused ? <Play size={15} strokeWidth={1.6} aria-hidden="true"/> : <Pause size={15} strokeWidth={1.6} aria-hidden="true"/>}
+    </button>
     <div className="photo-bottom">
       <span>{photo}</span>
       <span className="scene-label" aria-live="polite"><span className="scene-dot"/>{lang === "es" ? SCENES[scene].labelEs : SCENES[scene].label}</span>

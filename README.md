@@ -15,7 +15,9 @@ what changed, the test results, and the configuration still to do.
 - English/Spanish content and saved language preference.
 - Animated palm-tree hero: six painted scenes (evening, sunny, night, pre-dawn,
   rain, and "somewhere else") with voxel fumes drifting off the palms. It pauses
-  on hover and offscreen, and shows a still frame with reduced motion.
+  on hover and offscreen. Visitors whose system asks for reduced motion get a calmer version
+  (half the speed and particles) instead of a still frame, and a Pause/Play button on the art
+  lets anyone stop it; the choice is remembered.
 - Approved Saturn-eye icon: blue planet, red iris, dark navy ring.
 - Interactive inventory, landing page, business profile, order grid, and charts.
 - Inquiry form in English and Spanish, validated on the server and saved by Django,
