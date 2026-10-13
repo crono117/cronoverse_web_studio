@@ -66,3 +66,6 @@ __pycache__/
 **/secrets/
 *service-account*.json
 *credentials*.json
+
+# Browser QA screenshots (scripts/qa-browser.mjs)
+/qa-shots/

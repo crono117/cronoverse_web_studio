@@ -17,3 +17,19 @@ Midnight navy (#0D1628), electric blue (#62C5FF), and restrained signal red (#FF
 ## Approved brand icon
 
 `public/cronoverse-saturn-eye-navy.png` is the approved Cronoverse mark: an electric-blue Saturn globe, an eye with a coral-red iris, and a dark navy orbital ring. It was created and refined with the built-in image-generation tool, then explicitly approved for the navbar, footer, and browser icon. The earlier `cronoverse-saturn.png`, `cronoverse-saturn-eye.png`, and `favicon.svg` files are retained historical concepts and are not the active brand assets.
+
+## Served image renditions
+
+The PNG files remain the editable masters. The page serves smaller copies made with sharp
+(the image library Wrangler already installs):
+
+| File | Made from | Settings |
+| --- | --- | --- |
+| `hero-*.webp` | `hero-*.png` (1254×1254) | WebP quality 80, effort 6 |
+| `hero-*-800.webp` | `hero-*.png` | resized to 800px wide, WebP quality 78 |
+| `cronoverse-mark-128.png` | `cronoverse-saturn-eye-navy.png` | 128×128, palette PNG (shown at 64px) |
+| `favicon-48.png`, `apple-touch-icon.png` | `cronoverse-saturn-eye-navy.png` | 48×48 transparent; 180×180 on navy `#0D1628` |
+| `cronoverse-og.jpg` | evening palms artwork + brand mark | 1200×630, navy panel with the hero headline, JPEG quality 84 |
+
+The six hero scenes went from about 12.3 MB of PNG to about 1.25 MB of WebP (about 0.6 MB at
+800px). Regenerate the renditions whenever a master changes.

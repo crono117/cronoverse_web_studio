@@ -12,7 +12,11 @@ what changed, the test results, and the configuration still to do.
 
 ## Current experience
 
-- English/Spanish content and saved language preference.
+- Page flow: hero → services (websites, business software, automation) → interactive examples →
+  why Cronoverse → process → project inquiry. Copy and rationale: [docs/MARKETING_OVERHAUL.md](docs/MARKETING_OVERHAUL.md).
+- English at `/`, Spanish at `/?lang=es`. The server renders the chosen language (from `?lang=`
+  or the remembered `cronoverse-language` cookie), so there is no flash of the other language,
+  and each language has its own title, description, canonical URL, and hreflang links.
 - Animated palm-tree hero: six painted scenes (evening, sunny, night, pre-dawn,
   rain, and "somewhere else") with voxel fumes drifting off the palms. It pauses
   on hover and offscreen. Visitors whose system asks for reduced motion get a calmer version
@@ -20,9 +24,14 @@ what changed, the test results, and the configuration still to do.
   lets anyone stop it; the choice is remembered.
 - Approved Saturn-eye icon: blue planet, red iris, dark navy ring.
 - Interactive inventory, landing page, business profile, order grid, and charts.
-- Inquiry form in English and Spanish, validated on the server and saved by Django,
+- Inquiry form in English and Spanish, validated in the browser (translated messages) and on
+  the server, saved by Django; service cards preselect the matching service,
   with an English or Spanish welcome email and an owner notification.
-- Google Analytics only after the visitor allows it, with a way to change the choice.
+- Google Analytics only after the visitor allows it, with a way to change the choice. Events:
+  `hero_cta_click`, `service_cta_click`, `demo_interaction`, `contact_form_start`,
+  `language_change`, and `generate_lead` (confirmed inquiries only); no form content is sent.
+- `robots.txt`, `sitemap.xml`, Open Graph/Twitter previews (`public/cronoverse-og.jpg`), and
+  `Organization` structured data.
 
 The carousel uses sample data and component state. It does not create real
 products, orders, sales, or appointments.
@@ -104,7 +113,11 @@ Real Mailjet delivery and Google reporting require private server configuration.
 
 | Path | Purpose |
 | --- | --- |
-| `app/page.tsx` | Landing page, translations, language selection, inquiry form |
+| `app/page.tsx` | Server entry: per-language metadata (title, canonical, hreflang, Open Graph) and JSON-LD |
+| `components/home.tsx` | Landing page, translations, language selection, inquiry form |
+| `lib/site.ts` | Site URL, language rules, page metadata copy, and structured data |
+| `proxy.ts` | Picks the page language before rendering (`?lang=` then cookie) |
+| `app/robots.ts`, `app/sitemap.ts` | `robots.txt` and `sitemap.xml` with both language URLs |
 | `components/hero-scenes.tsx` | Hero scene layers, scheduler, and bilingual labels |
 | `lib/cronoverse-fumes.ts` | Canvas engine for the palm and causeway fumes (`@ts-nocheck` on purpose) |
 | `lib/inquiry-intake.ts` | Server-side validation and forwarding to Django |
@@ -122,8 +135,10 @@ Real Mailjet delivery and Google reporting require private server configuration.
 | `db/schema.ts`, `db/raw.ts` | Database schema and D1 access |
 | `drizzle/` | Versioned database migrations |
 | `wrangler.local.jsonc` | Local-only migration configuration |
-| `public/hero-digital-palms.png`, `public/hero-*.png` | Approved evening hero illustration and the five other scenes |
-| `public/cronoverse-saturn-eye-navy.png` | Navbar, footer, and favicon artwork |
+| `public/hero-*.webp`, `public/hero-*-800.webp` | Served hero scenes (WebP, full and 800px wide); the `.png` files are the masters |
+| `public/cronoverse-og.jpg` | 1200×630 social preview image |
+| `public/cronoverse-mark-128.png`, `favicon-48.png`, `apple-touch-icon.png` | Brand mark sized for the header/footer, favicon, and home-screen icon |
+| `public/cronoverse-saturn-eye-navy.png` | Master artwork for the brand mark (the sized copies above are served) |
 
 ## Hosting and provenance
 
