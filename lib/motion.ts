@@ -46,3 +46,23 @@ export function onMotionChange(listener: () => void) {
     listeners.delete(listener);
   };
 }
+
+/** Runs `start` once the page has loaded and the browser is idle, so canvas effects never
+ *  compete with the first paint of the headline and artwork. Returns a cancel function. */
+export function afterFirstPaint(start: () => void) {
+  if (typeof window === "undefined") return () => {};
+  let idle = 0, timer = 0, done = false;
+  const run = () => { if (!done) { done = true; start(); } };
+  const schedule = () => {
+    if ("requestIdleCallback" in window) idle = window.requestIdleCallback(run, { timeout: 1500 });
+    else timer = setTimeout(run, 200) as unknown as number;
+  };
+  if (document.readyState === "complete") schedule();
+  else window.addEventListener("load", schedule, { once: true });
+  return () => {
+    done = true;
+    window.removeEventListener("load", schedule);
+    if (idle) cancelIdleCallback(idle);
+    clearTimeout(timer);
+  };
+}

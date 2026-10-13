@@ -38,9 +38,9 @@ const eslintConfig = defineConfig([
     },
   },
   {
-    files: ["app/page.tsx", "components/google-analytics.tsx"],
+    files: ["components/home.tsx", "components/google-analytics.tsx"],
     rules: {
-      // Both read client-only state (?lang=, localStorage, analytics consent)
+      // Both read client-only state (the captcha key, legacy localStorage language, analytics consent)
       // after mount. Rendering the server default first and updating in an
       // effect keeps hydration identical and avoids a server/client mismatch.
       "react-hooks/set-state-in-effect": "off",

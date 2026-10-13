@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Compass, Pause, Play } from "lucide-react";
 import { palms, weather, causeway, SCENES } from "@/lib/cronoverse-fumes";
-import { isMotionPaused, onMotionChange, setMotionPaused } from "@/lib/motion";
+import { afterFirstPaint, isMotionPaused, onMotionChange, setMotionPaused } from "@/lib/motion";
 
 /* Hero artwork with the day / weather cycle.
    Render as the ONLY child content of .hero-visual (it returns a fragment so the existing
@@ -25,6 +25,8 @@ type Props = {
 };
 
 const imgStyle = { transition: "opacity 1.2s ease" } as const;
+// WebP renditions of the scene paintings (the PNG masters stay in public/ for editing).
+const art = (name: string) => ({ src: `/${name}.webp`, srcSet: `/${name}-800.webp 800w, /${name}.webp 1254w`, sizes: "(max-width: 640px) 100vw, 46vw" });
 const layer = { position: "absolute", inset: 0, borderRadius: 2, pointerEvents: "none", overflow: "hidden" } as const;
 const tint = (op: number) => ({ ...layer, background: "var(--ink)", transition: "opacity 1.2s ease", opacity: op });
 
@@ -45,17 +47,25 @@ export function HeroScenes({
     return onMotionChange(sync);
   }, []);
 
-  // Effects mount once.
+  // The evening painting is a plain <img> and paints at once. The other scene paintings and the
+  // canvas engines start only after the first paint, so they never compete with it for bandwidth
+  // or the main thread. The scheduler below is declared after this effect, so in the same commit
+  // it starts the scene cycle only once the engines exist.
+  const [artReady, setArtReady] = useState(false);
+  useEffect(() => afterFirstPaint(() => setArtReady(true)), []);
   useEffect(() => {
+    if (!artReady) return;
     const f = fx.current;
     if (palmRef.current) f.palms = palms(palmRef.current, { phase: 1.3, palette: SCENES[0].palette as any });
     if (weatherRef.current) { f.weather = weather(weatherRef.current); f.weather.setScene(SCENES[0]); }
+    // The surreal painting now has its src, so the causeway engine waits for it to load.
     if (causewayRef.current && surrealImg.current) f.causeway = causeway(causewayRef.current, surrealImg.current);
     return () => { f.palms?.(); f.weather?.(); f.causeway?.stop(); };
-  }, []);
+  }, [artReady]);
 
   // Scheduler.
   useEffect(() => {
+    if (!artReady) return;
     let timer = 0, hovering = false, randomsShown = 0, lastRandom = -1, cur = 0;
     const hero = palmRef.current?.closest(".hero") as HTMLElement | null;
 
@@ -102,19 +112,19 @@ export function HeroScenes({
 
     if (startScene > 0) { randomsShown = 1; lastRandom = startScene; show(startScene); } else schedule();
     return () => { offMotion(); clearTimeout(timer); hero?.removeEventListener("pointerenter", enter); hero?.removeEventListener("pointerleave", leave); };
-  }, [startScene, eveningSeconds, randomSeconds, randomCount, rainSeconds, rainChance, causewaySeconds, retraceSeconds]);
+  }, [artReady, startScene, eveningSeconds, randomSeconds, randomCount, rainSeconds, rainChance, causewaySeconds, retraceSeconds]);
 
   const op = (i: number) => (scene === i ? 1 : 0);
   return <>
-    <img src="/hero-digital-palms.png" width="1254" height="1254" alt={alt} fetchPriority="high"/>
-    <img src="/hero-sunny.png" width="1254" height="1254" alt="" aria-hidden="true" loading="lazy" style={{ ...imgStyle, opacity: op(1) }}/>
+    <img {...art("hero-digital-palms")} width="1254" height="1254" alt={alt} fetchPriority="high"/>
+    <img {...(artReady ? art("hero-sunny") : {})} width="1254" height="1254" alt="" aria-hidden="true" style={{ ...imgStyle, opacity: op(1) }}/>
     <div aria-hidden="true" style={tint(scene === 1 ? dayTint : 0)}/>
-    <img src="/hero-night.png" width="1254" height="1254" alt="" aria-hidden="true" loading="lazy" style={{ ...imgStyle, opacity: op(2) }}/>
-    <img src="/hero-predawn.png" width="1254" height="1254" alt="" aria-hidden="true" loading="lazy" style={{ ...imgStyle, opacity: op(3) }}/>
-    <img ref={surrealImg} src="/hero-surreal.png" width="1254" height="1254" alt="" aria-hidden="true" style={{ ...imgStyle, opacity: op(5) }}/>
+    <img {...(artReady ? art("hero-night") : {})} width="1254" height="1254" alt="" aria-hidden="true" style={{ ...imgStyle, opacity: op(2) }}/>
+    <img {...(artReady ? art("hero-predawn") : {})} width="1254" height="1254" alt="" aria-hidden="true" style={{ ...imgStyle, opacity: op(3) }}/>
+    <img ref={surrealImg} {...(artReady ? art("hero-surreal") : {})} width="1254" height="1254" alt="" aria-hidden="true" style={{ ...imgStyle, opacity: op(5) }}/>
     <span ref={causewayRef} aria-hidden="true" style={{ ...layer, transition: "opacity 1.2s ease", opacity: op(5) }}><canvas style={{ position: "absolute", display: "block" }}/></span>
     <div aria-hidden="true" style={tint(scene === 5 ? surrealTint : 0)}/>
-    <img src="/hero-rain.png" width="1254" height="1254" alt="" aria-hidden="true" loading="lazy" style={{ ...imgStyle, opacity: op(4) }}/>
+    <img {...(artReady ? art("hero-rain") : {})} width="1254" height="1254" alt="" aria-hidden="true" style={{ ...imgStyle, opacity: op(4) }}/>
     <span ref={palmRef} aria-hidden="true" style={layer}><canvas style={{ position: "absolute", display: "block" }}/></span>
     <span ref={weatherRef} aria-hidden="true" style={layer}><canvas style={{ position: "absolute", display: "block" }}/></span>
     <div className="photo-shade"/>

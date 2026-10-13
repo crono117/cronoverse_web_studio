@@ -456,18 +456,18 @@ function causeway(host, img, { objectPosition = [.5, .42] } = {}) {
 
 /* ---------- Scenes. Each is its own painted artwork (same framing), crossfaded. ---------- */
 const SCENES = [
-  { id: "A", label: "EVENING · CLEAR", labelEs: "ATARDECER · DESPEJADO", img: "/hero-digital-palms.png", weather: {},
+  { id: "A", label: "EVENING · CLEAR", labelEs: "ATARDECER · DESPEJADO", img: "/hero-digital-palms.webp", weather: {},
     palette: { cool: BLUE, warm: CORAL, warmBias: 1 } },
-  { id: "B", label: "MIDDAY · SUNNY", labelEs: "MEDIODÍA · SOLEADO", img: "/hero-sunny.png", weather: {},
+  { id: "B", label: "MIDDAY · SUNNY", labelEs: "MEDIODÍA · SOLEADO", img: "/hero-sunny.webp", weather: {},
     palette: { cool: [["#62e0ff", "#d9f7ff"], ["#8fd8ff", "#ffffff"], ["#3fb2ff", "#b9e6ff"]], warm: [["#ff8fa3", "#ffd6de"], ["#ffb38a", "#ffe3d1"], ["#ff9ad5", "#ffd9f0"]], warmBias: .8 } },
-  { id: "C", label: "NIGHT · CRESCENT MOON", labelEs: "NOCHE · LUNA CRECIENTE", img: "/hero-night.png", weather: { stars: .7 },
+  { id: "C", label: "NIGHT · CRESCENT MOON", labelEs: "NOCHE · LUNA CRECIENTE", img: "/hero-night.webp", weather: { stars: .7 },
     palette: { cool: [["#4f9dff", "#b3d4ff"], ["#62c5ff", "#c9ecff"], ["#6f7dff", "#b8c0ff"]], warm: [["#ff6a5c", "#ffb3a8"], ["#ff8a4c", "#ffc9a3"]], warmBias: .8 } },
-  { id: "D", label: "PRE-DAWN · BLUE HOUR", labelEs: "PREAMANECER · HORA AZUL", img: "/hero-predawn.png", weather: { stars: .4 },
+  { id: "D", label: "PRE-DAWN · BLUE HOUR", labelEs: "PREAMANECER · HORA AZUL", img: "/hero-predawn.webp", weather: { stars: .4 },
     palette: { cool: [["#5aa8ff", "#c2dcff"], ["#62c5ff", "#c9ecff"], ["#8a8dff", "#cfd0ff"]], warm: [["#ff7a6b", "#ffc0b5"], ["#ffa07a", "#ffd4bd"]], warmBias: .9 } },
-  { id: "E", label: "NIGHT · RAIN", labelEs: "NOCHE · LLUVIA", img: "/hero-rain.png", rare: true, weather: { rain: .75 },
+  { id: "E", label: "NIGHT · RAIN", labelEs: "NOCHE · LLUVIA", img: "/hero-rain.webp", rare: true, weather: { rain: .75 },
     palette: { cool: [["#5fb8ff", "#c6e6ff"], ["#6f7dff", "#bcc3ff"], ["#8a6dff", "#cbb8ff"], ["#62c5ff", "#d0f0ff"]], warm: [["#9d8cff", "#d6ceff"]], warmBias: .3 } },
   // The one off-palette scene: mint + lavender voxels, a door on the horizon.
-  { id: "F", label: "SOMEWHERE ELSE", labelEs: "EN OTRO LUGAR", img: "/hero-surreal.png", weather: {},
+  { id: "F", label: "SOMEWHERE ELSE", labelEs: "EN OTRO LUGAR", img: "/hero-surreal.webp", weather: {},
     palette: { cool: [["#8ff0c0", "#dcfff0"], ["#6fe0b0", "#c8f7e2"], ["#b9f5d8", "#f0fff8"]], warm: [["#c9a0ff", "#eddcff"], ["#b58cf5", "#e2d0ff"], ["#e0b8ff", "#f6ebff"]], warmBias: 1.4 } },
 ];
 

@@ -113,6 +113,39 @@ export function applyAnalyticsConsent(rawId: unknown, consent: AnalyticsConsent)
   return true;
 }
 
+// "app" is the retired "web app or integration" choice, still accepted from cached pages.
+export const INQUIRY_SERVICES = ["new", "redesign", "software", "automation", "unsure", "app"] as const;
+
+// Interaction events. Each allows only the listed parameters, and every value must be a
+// short slug from the page's own code, so visitor text can never reach Google.
+const EVENT_PARAMS = {
+  hero_cta_click: ["cta"],
+  service_cta_click: ["service"],
+  demo_interaction: ["demo", "action"],
+  contact_form_start: ["form_name"],
+  language_change: ["language"],
+} as const;
+export type AnalyticsEvent = keyof typeof EVENT_PARAMS;
+const onceEvents = new Set<string>();
+
+/** Sends an interaction event when analytics consent is granted. A `once` key suppresses repeats per page load. */
+export function trackEvent(name: AnalyticsEvent, params: Record<string, string> = {}, once?: string): boolean {
+  if (!activeId || typeof window === "undefined" || !window.gtag || !Object.hasOwn(EVENT_PARAMS, name)) return false;
+  const allowed: readonly string[] = EVENT_PARAMS[name];
+  for (const [key, value] of Object.entries(params)) {
+    if (!allowed.includes(key) || typeof value !== "string" || !/^[a-z0-9_-]{1,40}$/.test(value)) return false;
+  }
+  const onceKey = once === undefined ? "" : name + ":" + once;
+  if (onceKey && onceEvents.has(onceKey)) return false;
+  try {
+    window.gtag("event", name, { send_to: activeId, ...params });
+    if (onceKey) onceEvents.add(onceKey);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export function trackInquirySuccess(id: string, service: string, language: string): boolean {
   if (!activeId || !id || countedInquiries.has(id) || typeof window === "undefined") return false;
   try {
@@ -120,7 +153,7 @@ export function trackInquirySuccess(id: string, service: string, language: strin
     window.gtag("event", "generate_lead", {
       send_to: activeId,
       form_name: "project_inquiry",
-      service: ["new", "redesign", "app", "unsure"].includes(service) ? service : "unsure",
+      service: (INQUIRY_SERVICES as readonly string[]).includes(service) ? service : "unsure",
       language: language === "es" ? "es" : "en",
     });
     // Used only for local deduplication; never sent to Google.

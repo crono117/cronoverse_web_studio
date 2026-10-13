@@ -10,17 +10,20 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ChartContainer, ChartTooltip } from "@/components/ui/chart";
+import { trackEvent } from "@/lib/analytics";
 
 type Language = "en" | "es";
 type DemoProps = { lang: Language };
 const words = (lang: Language) => (en: string, es: string) => lang === "en" ? en : es;
 const dollars = (value: number, lang: Language) => new Intl.NumberFormat(lang === "en" ? "en-US" : "es-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(value);
+// The first real use of each example (pointer, key, or typed/pasted input) is reported once per page load.
+const used = (slug: string) => trackEvent("demo_interaction", { demo: slug, action: "use" }, "use:" + slug);
 const demos = [
-  { name: ["Inventory", "Inventario"], title: ["A store that stays in sync.", "Una tienda al día."], hint: ["Find a product and adjust its stock.", "Busca un producto y ajusta su stock."], icon: ShoppingBag, component: InventoryDemo },
-  { name: ["Landing page", "Landing page"], title: ["A first impression with personality.", "Una primera impresión con personalidad."], hint: ["Try another color and explore the page.", "Cambia el color y explora la página."], icon: LayoutTemplate, component: LandingDemo },
-  { name: ["Business profile", "Perfil"], title: ["Your business, clearly presented.", "Tu negocio, bien presentado."], hint: ["Explore services and preview an appointment.", "Explora servicios y prueba una cita."], icon: Building2, component: ProfileDemo },
-  { name: ["Data grid", "Datos"], title: ["Find the details that matter.", "Encuentra los datos que importan."], hint: ["Search, filter, or sort by order total.", "Busca, filtra u ordena por total."], icon: Table2, component: GridDemo },
-  { name: ["Charts", "Gráficos"], title: ["Turn numbers into a clear picture.", "Dale claridad a tus números."], hint: ["Change the period or compare sales channels.", "Cambia el período o compara canales de venta."], icon: TrendingUp, component: GraphDemo },
+  { name: ["Inventory", "Inventario"], title: ["A store that stays in sync.", "Una tienda al día."], hint: ["Track products, check stock levels, and update quantities in one place.", "Consulta productos, revisa existencias y actualiza cantidades desde un solo lugar."], slug: "inventory", icon: ShoppingBag, component: InventoryDemo },
+  { name: ["Landing page", "Landing page"], title: ["A first impression with personality.", "Una primera impresión con personalidad."], hint: ["See how a focused landing page presents an offer and guides visitors to take action.", "Descubre cómo una página de destino presenta una oferta y ayuda a los visitantes a dar el siguiente paso."], slug: "landing_page", icon: LayoutTemplate, component: LandingDemo },
+  { name: ["Business profile", "Perfil"], title: ["Your business, clearly presented.", "Tu negocio, bien presentado."], hint: ["Give customers a clear view of your services, business information, and ways to contact you.", "Muestra tus servicios, información empresarial y opciones de contacto en una página clara."], slug: "business_profile", icon: Building2, component: ProfileDemo },
+  { name: ["Data grid", "Datos"], title: ["Find the details that matter.", "Encuentra los datos que importan."], hint: ["Search orders, check statuses, and find the information your team needs.", "Busca pedidos, revisa estados y encuentra la información que necesita tu equipo."], slug: "data_grid", icon: Table2, component: GridDemo },
+  { name: ["Charts", "Gráficos"], title: ["Turn numbers into a clear picture.", "Dale claridad a tus números."], hint: ["Turn business data into charts that are easier to understand and explore.", "Convierte los datos de tu negocio en gráficos fáciles de interpretar y explorar."], slug: "charts", icon: TrendingUp, component: GraphDemo },
 ];
 
 export function CapabilityShowcase({ lang }: DemoProps) {
@@ -37,8 +40,9 @@ export function CapabilityShowcase({ lang }: DemoProps) {
   useEffect(() => {
     if (!api) return;
     const update = () => setCurrent(api.selectedScrollSnap());
-    update(); api.on("select", update); api.on("reInit", update);
-    return () => { api.off("select", update); api.off("reInit", update); };
+    const opened = () => { const slug = demos[api.selectedScrollSnap()]?.slug; if (slug) trackEvent("demo_interaction", { demo: slug, action: "open" }, "open:" + slug); };
+    update(); api.on("select", update); api.on("select", opened); api.on("reInit", update);
+    return () => { api.off("select", update); api.off("select", opened); api.off("reInit", update); };
   }, [api]);
   function navigateKeyboard(event: KeyboardEvent<HTMLDivElement>) {
     if ((event.target as Element).closest("input,button,textarea,select,a,[role=slider],[data-slot=chart],[role=tablist],[role=group][data-slot=toggle-group]")) return;
@@ -55,7 +59,7 @@ export function CapabilityShowcase({ lang }: DemoProps) {
       </div>
       <CarouselContent className="showcase-track">
         {demos.map((demo, i) => <CarouselItem key={demo.name[0]} className="showcase-slide" inert={i !== current} aria-hidden={i !== current} aria-label={`${i + 1} / ${demos.length}: ${demo.name[languageIndex]}`}>
-          <div className="showcase-browser"><div className="showcase-browser-bar"><span aria-hidden="true">○ ○ ○</span><span>{demo.name[languageIndex]}</span><span className="demo-browser-tag">{t("PREVIEW", "VISTA PREVIA")}</span></div><div className="demo-stage"><demo.component lang={lang}/></div></div>
+          <div className="showcase-browser"><div className="showcase-browser-bar"><span aria-hidden="true">○ ○ ○</span><span>{demo.name[languageIndex]}</span><span className="demo-browser-tag">{t("PREVIEW", "VISTA PREVIA")}</span></div><div className="demo-stage" onPointerDownCapture={() => used(demo.slug)} onKeyDownCapture={() => used(demo.slug)} onInputCapture={() => used(demo.slug)}><demo.component lang={lang}/></div></div>
         </CarouselItem>)}
       </CarouselContent>
       <div className="showcase-caption"><div aria-live="polite" aria-atomic="true"><h3>{demos[current].title[languageIndex]}</h3><p>{demos[current].hint[languageIndex]}</p></div><div className="showcase-arrows"><Button type="button" variant="outline" size="icon" aria-label={t("Previous example", "Ejemplo anterior")} onClick={() => api?.scrollPrev(reducedMotion)}><ArrowLeft/></Button><span>{String(current + 1).padStart(2, "0")} / 05</span><Button type="button" variant="outline" size="icon" aria-label={t("Next example", "Siguiente ejemplo")} onClick={() => api?.scrollNext(reducedMotion)}><ArrowRight/></Button></div></div>
@@ -93,7 +97,7 @@ function LandingDemo({ lang }: DemoProps) {
   const [theme, setTheme] = useState("blue");
   const [details, setDetails] = useState(false);
   return <div className="landing-demo"><div className="demo-toolbar"><span>{t("Make it yours", "Dale tu estilo")}</span><ToggleGroup type="single" value={theme} onValueChange={v => v && setTheme(v)} aria-label={t("Landing page accent", "Color de la landing page")}><ToggleGroupItem value="blue">{t("Blue", "Azul")}</ToggleGroupItem><ToggleGroupItem value="coral">Coral</ToggleGroupItem></ToggleGroup></div>
-    <div className={`landing-preview landing-${theme}`}><div className="landing-mini-brand">COAST / STUDIO <span>EST. 2026</span></div><div className="landing-mini-hero"><img src="/hero-digital-palms.png" alt="" loading="lazy"/><div><span className="demo-kicker">{t("MADE FOR WHAT'S NEXT", "CREADO PARA LO QUE VIENE")}</span><h4>{t("Stand out.\nMake waves.", "Destaca.\nDeja huella.")}</h4><p>{t("A fresh perspective for your next big idea.", "Una nueva mirada para tu próxima gran idea.")}</p><Button type="button" aria-expanded={details} className="landing-demo-cta" onClick={() => setDetails(v => !v)}>{details ? t("Back to the vision", "Volver a la visión") : t("Explore the vision", "Explora la visión")}<ArrowUpRight size={16}/></Button></div></div><div className="landing-mini-bottom" role="status">{details ? t("A clear story. A bold design. An invitation to connect.", "Una historia clara. Un diseño audaz. Una invitación a conectar.") : t("DESIGN WITH PURPOSE · SOUTHERN CALIFORNIA", "DISEÑO CON PROPÓSITO · SUR DE CALIFORNIA")}</div></div>
+    <div className={`landing-preview landing-${theme}`}><div className="landing-mini-brand">COAST / STUDIO <span>EST. 2026</span></div><div className="landing-mini-hero"><img src="/hero-digital-palms-800.webp" alt="" loading="lazy" width="800" height="800"/><div><span className="demo-kicker">{t("MADE FOR WHAT'S NEXT", "CREADO PARA LO QUE VIENE")}</span><h4>{t("Stand out.\nMake waves.", "Destaca.\nDeja huella.")}</h4><p>{t("A fresh perspective for your next big idea.", "Una nueva mirada para tu próxima gran idea.")}</p><Button type="button" aria-expanded={details} className="landing-demo-cta" onClick={() => setDetails(v => !v)}>{details ? t("Back to the vision", "Volver a la visión") : t("Explore the vision", "Explora la visión")}<ArrowUpRight size={16}/></Button></div></div><div className="landing-mini-bottom" role="status">{details ? t("A clear story. A bold design. An invitation to connect.", "Una historia clara. Un diseño audaz. Una invitación a conectar.") : t("DESIGN WITH PURPOSE · SOUTHERN CALIFORNIA", "DISEÑO CON PROPÓSITO · SUR DE CALIFORNIA")}</div></div>
   </div>;
 }
 

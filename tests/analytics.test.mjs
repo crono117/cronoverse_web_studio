@@ -86,6 +86,45 @@ test('successful inquiry events are deduplicated and contain only allowed catego
   assert.ok(!JSON.stringify(events).includes('private'));
 });
 
+test('new service categories are reported as themselves', async (t) => {
+  const {analytics, commands} = await browser(t);
+  analytics.applyAnalyticsConsent('G-TEST123456', 'granted');
+  assert.equal(analytics.trackInquirySuccess('id-1', 'software', 'en'), true);
+  assert.equal(analytics.trackInquirySuccess('id-2', 'automation', 'es'), true);
+  const events = commands().filter(([command]) => command === 'event');
+  assert.deepEqual(events.map((event) => event[2].service), ['software', 'automation']);
+});
+
+test('interaction events need consent and send only allow-listed slug parameters', async (t) => {
+  const {analytics, commands} = await browser(t);
+  assert.equal(analytics.trackEvent('hero_cta_click', {cta: 'primary'}), false);
+  analytics.applyAnalyticsConsent('G-TEST123456', 'granted');
+  assert.equal(analytics.trackEvent('hero_cta_click', {cta: 'primary'}), true);
+  assert.equal(analytics.trackEvent('language_change', {language: 'es'}), true);
+  // Unknown events, unknown parameters, and free text are dropped entirely.
+  assert.equal(analytics.trackEvent('page_view', {}), false);
+  assert.equal(analytics.trackEvent('hero_cta_click', {email: 'x'}), false);
+  assert.equal(analytics.trackEvent('demo_interaction', {demo: 'private@example.com'}), false);
+  assert.equal(analytics.trackEvent('demo_interaction', {demo: 'Alex Rivera'}), false);
+  const events = commands().filter(([command]) => command === 'event');
+  assert.deepEqual(events, [
+    ['event', 'hero_cta_click', {send_to: 'G-TEST123456', cta: 'primary'}],
+    ['event', 'language_change', {send_to: 'G-TEST123456', language: 'es'}],
+  ]);
+  assert.ok(!JSON.stringify(events).includes('private'));
+});
+
+test('once keys send an interaction event a single time per page load', async (t) => {
+  const {analytics, commands} = await browser(t);
+  analytics.applyAnalyticsConsent('G-TEST123456', 'granted');
+  assert.equal(analytics.trackEvent('contact_form_start', {form_name: 'project_inquiry'}, 'inquiry'), true);
+  assert.equal(analytics.trackEvent('contact_form_start', {form_name: 'project_inquiry'}, 'inquiry'), false);
+  assert.equal(analytics.trackEvent('demo_interaction', {demo: 'inventory', action: 'use'}, 'inventory'), true);
+  assert.equal(analytics.trackEvent('demo_interaction', {demo: 'charts', action: 'use'}, 'charts'), true);
+  assert.equal(analytics.trackEvent('demo_interaction', {demo: 'inventory', action: 'use'}, 'inventory'), false);
+  assert.equal(commands().filter(([command]) => command === 'event').length, 3);
+});
+
 test('withdrawal stops events and clears analytics cookies without deleting session cookies', async (t) => {
   const {analytics, scripts, commands, deletedCookies} = await browser(t);
   analytics.applyAnalyticsConsent('G-TEST123456', 'granted');
