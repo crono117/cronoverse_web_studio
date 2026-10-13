@@ -53,6 +53,16 @@ test("rejects invalid origin, JSON, fields and honeypot before contacting backen
   assert.equal((await submitInquiry(malformed, config, never)).status, 400);
 });
 
+test("accepts every current service choice and the retired app choice from cached pages", async () => {
+  for (const service of ["new", "redesign", "software", "automation", "unsure", "app"]) {
+    const result = await submitInquiry(request({ ...payload, id: randomUUID(), service }), config, async (_url, options) => {
+      assert.equal(JSON.parse(options.body).service, service);
+      return Response.json({ ok: true }, { status: 201 });
+    });
+    assert.equal(result.status, 201, service);
+  }
+});
+
 test("enforces actual UTF-8 byte limits, including streams without content-length", async () => {
   const body = JSON.stringify({ ...payload, message: "é".repeat(12_001) });
   const oversized = new Request("https://studio.example.com/api/inquiries", { method: "POST", headers: { "Content-Type": "application/json" }, body });

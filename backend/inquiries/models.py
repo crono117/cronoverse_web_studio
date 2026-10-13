@@ -8,8 +8,12 @@ class Inquiry(models.Model):
     class Service(models.TextChoices):
         NEW = "new", "New website"
         REDESIGN = "redesign", "Website redesign"
-        APP = "app", "Web app or integration"
-        UNSURE = "unsure", "Let's figure it out together"
+        SOFTWARE = "software", "Custom business software"
+        AUTOMATION = "automation", "Automation or integration"
+        UNSURE = "unsure", "Not sure yet"
+        # Retired from the form in the marketing overhaul; kept so earlier inquiries keep their
+        # meaning and a page cached before the release can still submit.
+        APP = "app", "Web app or integration (earlier form)"
 
     class Status(models.TextChoices):
         NEW = "new", "New"

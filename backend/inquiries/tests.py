@@ -134,6 +134,22 @@ class InquiryFlowTests(TransactionTestCase):
         self.assertEqual(Inquiry.objects.count(), 0)
         self.assertEqual(EmailDelivery.objects.count(), 0)
 
+    def test_each_form_service_is_saved_and_shown_with_its_label(self):
+        expected = {
+            "new": "New website", "redesign": "Website redesign",
+            "software": "Custom business software", "automation": "Automation or integration",
+            "unsure": "Not sure yet", "app": "Web app or integration (earlier form)",
+        }
+        for i, (service, label) in enumerate(expected.items()):
+            with self.subTest(service=service):
+                self.assertEqual(self.submit(payload(service=service, email=f"client{i}@example.com")).status_code, 201)
+                inquiry = Inquiry.objects.get(email=f"client{i}@example.com")
+                self.assertEqual(inquiry.service, service)
+                self.assertEqual(inquiry.get_service_display(), label)
+        self.drain()
+        alert = next(m for m in mail.outbox if m.to == ["lh@cronoverse.online"] and "client2@example.com" in m.body)
+        self.assertIn("Custom business software", alert.body)
+
     def test_service_key_required_and_no_public_read_or_edit(self):
         self.client.credentials()
         self.assertEqual(self.submit(payload()).status_code, 403)
