@@ -11,10 +11,16 @@ export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   applicationName: "Cronoverse",
   icons: {
-    icon: [{ url: "/favicon-48.png", sizes: "48x48", type: "image/png" }],
-    shortcut: "/favicon-48.png",
-    apple: "/apple-touch-icon.png",
+    icon: [
+      { url: "/brand/favicon/favicon.svg", type: "image/svg+xml" },
+      { url: "/brand/favicon/favicon.ico", sizes: "16x16 32x32 48x48 64x64" },
+      { url: "/brand/favicon/favicon-32.png", sizes: "32x32", type: "image/png" },
+      { url: "/brand/favicon/favicon-16.png", sizes: "16x16", type: "image/png" },
+    ],
+    shortcut: "/brand/favicon/favicon.ico",
+    apple: [{ url: "/brand/favicon/apple-touch-icon.png", sizes: "180x180" }],
   },
+  manifest: "/brand/favicon/site.webmanifest",
 };
 
 export const viewport: Viewport = { themeColor: "#0d1628" };

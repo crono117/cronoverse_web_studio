@@ -183,18 +183,17 @@ html[lang=es] .hero h1{font-size:clamp(30px,4.15vw,70px);letter-spacing:-2.5px}
 @media(max-width:640px) { .capability-showcase { padding:12px; } .showcase-categories { gap:3px; } .showcase-categories > button { padding:7px 8px; font-size:12px; } .showcase-categories svg { width:14px; } .showcase-caption { flex-direction:column; align-items:flex-start; gap:16px; padding-top:16px; } .showcase-arrows { width:100%; justify-content:space-between; } .demo-stage { padding:15px; min-height:490px; } .demo-stage h4 { font-size:20px; } .stock-row { grid-template-columns:26px minmax(0,1fr) auto; gap:8px; } .stock-icon { width:26px; } .stock-row em { margin-left:0; display:block; } .stock-stepper { gap:1px; } .stock-stepper > span { width:19px; } .demo-browser-tag { display:none; } .demo-heading { flex-wrap:wrap; } .landing-mini-hero { padding:23px 16px; } .landing-mini-hero h4 { font-size:32px; } .landing-mini-brand { padding-inline:14px; } .landing-mini-brand > span { display:none; } .graph-demo .demo-heading { gap:16px; } .demo-chart { height:238px; } }
 @media(pointer:coarse) { .capability-showcase button { min-height:44px; } .stock-stepper button { min-width:32px; } }
 
-/* The approved Saturn-eye icon is the Cronoverse brand mark. */
-.wordmark { gap:10px; flex-shrink:0; }
-.brand-mark { display:flex; align-items:center; justify-content:center; width:60px; height:44px; flex:none; background:transparent; border-radius:0; overflow:visible; }
-.brand-mark img { display:block; flex:none; width:64px; height:64px; max-width:none; object-fit:contain; }
+/* Approved brand artwork (public/brand): sizes come from the SVG's 1133x267 aspect ratio. */
+.brand-link { display:inline-flex; flex-shrink:0; line-height:0; }
+.brand-logo { display:block; width:240px; max-width:100%; height:auto; }
+.footer-logo { margin-bottom:12px; }
+.footer-logo .brand-logo { width:360px; }
 @media(max-width:640px) {
-  .wordmark { gap:8px; }
-  .brand-mark { width:44px; height:36px; }
-  .brand-mark img { width:48px; height:48px; }
+  .site-header .brand-logo { width:172px; }
 }
 @media(max-width:380px) {
   .site-header { gap:12px; }
-  .site-header .wordmark { font-size:20px; }
+  .site-header .brand-logo { width:140px; }
   .header-actions { gap:10px; }
 }
 
@@ -275,7 +274,6 @@ html[lang=es] .hero h1{font-size:clamp(30px,4.15vw,70px);letter-spacing:-2.5px}
 .footer-brand { display: grid; gap: 6px; }
 /* The older mobile rule places every .footer-top p on row 2; brand lines stack in their own grid. */
 .footer-top .footer-brand p { grid-column: auto; grid-row: auto; }
-.footer-brand .wordmark { margin-bottom: 12px; }
 .footer-top .footer-tagline { color: #edf3fc; font-size: 16px; }
 .footer-nav { display: grid; gap: 10px; font-size: 14px; color: #d5deed; }
 .footer-nav a:hover, .footer-cta:hover { color: var(--electric); }

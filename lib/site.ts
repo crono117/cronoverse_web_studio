@@ -48,7 +48,7 @@ export function organizationJsonLd(lang: Language) {
         "@id": `${SITE_URL}/#organization`,
         name: "Cronoverse",
         url: `${SITE_URL}/`,
-        logo: `${SITE_URL}/cronoverse-mark-128.png`,
+        logo: `${SITE_URL}/brand/png/cronoverse-mark-512.png`,
         image: `${SITE_URL}/cronoverse-og.jpg`,
         description: pageMeta[lang].description,
         areaServed: [

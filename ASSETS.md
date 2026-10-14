@@ -14,9 +14,45 @@ The continuous fractal-fume accents are procedural canvas geometry in `component
 
 Midnight navy (#0D1628), electric blue (#62C5FF), and restrained signal red (#FF5E73) define the palette. Cool white (#F3F6FB) and pale blue (#D6EAFF) support the lighter sections. Red is reserved for small accents; continuous particle motion stays calm.
 
-## Approved brand icon
+## Brand logo (bilingual)
 
-`public/cronoverse-saturn-eye-navy.png` is the approved Cronoverse mark: an electric-blue Saturn globe, an eye with a coral-red iris, and a dark navy orbital ring. It was created and refined with the built-in image-generation tool, then explicitly approved for the navbar, footer, and browser icon. The earlier `cronoverse-saturn.png`, `cronoverse-saturn-eye.png`, and `favicon.svg` files are retained historical concepts and are not the active brand assets.
+The active brand is the approved "Cronoverse Horizon" artwork: a blue C (`#20B4FE`) holding a
+coral rising sun (`#FB5A58`) split into three horizontal bands. It was supplied as
+`Cronoverse-Website-Assets.zip` and its `brand/` folder is installed unchanged at
+`public/brand/`, served at `/brand/...`. The SVGs are pure vector paths (no fonts, no
+embedded bitmaps); the PNGs in `brand/png/` are transparent raster fallbacks at 800/1600px
+(logos) and 64 to 1024px (mark).
+
+| Use | File |
+| --- | --- |
+| Navbar, navy background (EN and ES) | `/brand/svg/cronoverse-logo-on-dark.svg` |
+| Navbar, light background | `/brand/svg/cronoverse-logo-on-light.svg` |
+| Footer lockup, English, navy background | `/brand/svg/cronoverse-lockup-on-dark.svg` (descriptor: WEBSITES + BUSINESS SOFTWARE) |
+| Footer lockup, English, light background | `/brand/svg/cronoverse-lockup-on-light.svg` |
+| Footer lockup, Spanish | **not supplied yet**, see below |
+| Standalone icon | `/brand/svg/cronoverse-mark.svg` (square; PNGs in `brand/png/`) |
+| Browser and home-screen icons | `/brand/favicon/` (`favicon.svg`, `favicon.ico`, 16/32/48/64px PNGs, `apple-touch-icon.png`, 192/512px app icons, `site.webmanifest`) |
+
+The header and footer are both navy, so the page uses the on-dark files. The image already
+contains the word "cronoverse"; no text wordmark is placed beside it. `components/home.tsx`
+chooses the footer lockup from the current language (`FOOTER_LOCKUP`), and below a 420px
+viewport it shows the descriptor-free logo because the descriptor would be too small to read.
+
+**Spanish lockup.** The delivered pack contains no `cronoverse-lockup-es-on-dark.svg` /
+`cronoverse-lockup-es-on-light.svg` (descriptor: SITIOS WEB + SOFTWARE EMPRESARIAL). Until
+they are supplied, the Spanish footer uses the descriptor-free logo (the pack README rates it
+suitable for both languages), so Spanish visitors never see the English descriptor. To
+activate them: copy both files into `public/brand/svg/` and set `es` in `FOOTER_LOCKUP` to
+`/brand/svg/cronoverse-lockup-es-on-dark.svg`.
+
+`layout.tsx` declares the favicon set and `/brand/favicon/site.webmanifest` (the site had no
+manifest before). Copies of `favicon.ico` and `apple-touch-icon.png` also sit at the site root
+because browsers and iOS request those paths without being told to.
+
+Previous mark: `public/cronoverse-saturn-eye-navy.png` (the Saturn eye) and its renditions
+`cronoverse-mark-128.png` and `favicon-48.png` are kept for history and old external links,
+but no page references them. `cronoverse-og.jpg` still shows the Saturn mark and should be
+regenerated with the new logo.
 
 ## Served image renditions
 
@@ -27,8 +63,7 @@ The PNG files remain the editable masters. The page serves smaller copies made w
 | --- | --- | --- |
 | `hero-*.webp` | `hero-*.png` (1254×1254) | WebP quality 80, effort 6 |
 | `hero-*-800.webp` | `hero-*.png` | resized to 800px wide, WebP quality 78 |
-| `cronoverse-mark-128.png` | `cronoverse-saturn-eye-navy.png` | 128×128, palette PNG (shown at 64px) |
-| `favicon-48.png`, `apple-touch-icon.png` | `cronoverse-saturn-eye-navy.png` | 48×48 transparent; 180×180 on navy `#0D1628` |
+| `cronoverse-mark-128.png`, `favicon-48.png` | `cronoverse-saturn-eye-navy.png` | Previous brand, no longer referenced |
 | `cronoverse-og.jpg` | evening palms artwork + brand mark | 1200×630, navy panel with the hero headline, JPEG quality 84 |
 
 The six hero scenes went from about 12.3 MB of PNG to about 1.25 MB of WebP (about 0.6 MB at

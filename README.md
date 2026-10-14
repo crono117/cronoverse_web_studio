@@ -137,15 +137,19 @@ Real Mailjet delivery and Google reporting require private server configuration.
 | `wrangler.local.jsonc` | Local-only migration configuration |
 | `public/hero-*.webp`, `public/hero-*-800.webp` | Served hero scenes (WebP, full and 800px wide); the `.png` files are the masters |
 | `public/cronoverse-og.jpg` | 1200×630 social preview image |
-| `public/cronoverse-mark-128.png`, `favicon-48.png`, `apple-touch-icon.png` | Brand mark sized for the header/footer, favicon, and home-screen icon |
-| `public/cronoverse-saturn-eye-navy.png` | Master artwork for the brand mark (the sized copies above are served) |
+| `public/brand/` | Approved bilingual brand pack: navbar/footer logos (SVG + PNG), mark, favicons, web manifest. See `ASSETS.md` |
+| `public/cronoverse-saturn-eye-navy.png` | Previous brand mark, kept for history |
 
 ## Hosting and provenance
 
-The existing website is hosted through ChatGPT Sites. `.openai/hosting.json`
-identifies that Site and its `DB` binding; it contains no secrets. GitHub pushes
-**do not automatically deploy** the live website. No deployment workflow is
-configured in this initial export.
+`https://cronoverse.online/` runs as Docker containers (frontend, Django, email worker,
+PostgreSQL) in `/opt/cronoverse` on a DigitalOcean droplet, behind that server's existing
+Caddy. Releases are built on a workstation and streamed with `deploy/ship.sh`; each image is
+tagged with its Git commit. See `deploy/README.md` for the procedure and rollback. GitHub
+pushes **do not deploy** the live website.
+
+`.openai/hosting.json` records the original ChatGPT Sites project this code was exported
+from. It is historical and is not the current host.
 
 GitHub Actions checks the Django backend against PostgreSQL, and the frontend
 (tests, type check, lint, build) plus the loopback SMTP smoke. The Django web and
