@@ -100,7 +100,7 @@ for (const lang of ["en", "es"]) {
   await sleep(300);
   const s = await page.evaluate(() => ({ name: document.getElementById("name").value, msg: document.getElementById("message").value, lang: document.documentElement.lang, title: document.title, desc: document.querySelector('meta[name="description"]').content, url: location.search, label: document.querySelector("label[for=name]").textContent, h1: document.querySelector("h1").textContent, cookie: document.cookie }));
   check("switching language keeps form input", s.name === "Ana Typing" && s.msg === "Texto que no debe perderse.");
-  check("Spanish copy renders after switching", s.label.startsWith("Tu nombre") && s.h1.startsWith("Mejores sitios web."), s.h1);
+  check("Spanish copy renders after switching", s.label.startsWith("Tu nombre") && s.h1.startsWith("Tu competencia"), s.h1);
   check("html lang, title, and description follow the language", s.lang === "es" && s.title.includes("Desarrollo Web") && s.desc.startsWith("Creamos sitios web"));
   check("URL and cookie remember Spanish", s.url === "?lang=es" && s.cookie.includes("cronoverse-language=es"), s.url + " / " + s.cookie);
   await page.goto(BASE + "/", { waitUntil: "domcontentloaded" });

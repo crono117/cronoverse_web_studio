@@ -28,8 +28,8 @@ Hero → 01 Services → 02 Interactive examples → 03 Why Cronoverse → 04 Pr
 05 Contact, each with a scroll anchor (`#services`, `#examples`, `#why`, `#process`,
 `#contact`) and header/footer links.
 
-- **Hero:** the approved eyebrow, the two-line headline "Better websites. / Smarter business."
-  (Spanish: "Mejores sitios web. / Negocios más eficientes."), description, primary CTA → form,
+- **Hero:** the approved eyebrow, the two-line headline "Your competition is upgrading right now. / Are you?"
+  (Spanish: "Tu competencia ya se está modernizando. / ¿Y tú?"), description, primary CTA → form,
   secondary CTA → services, and the supporting service line. The headline is sized per
   breakpoint and language, so it stays on two lines from 640px up. Both CTAs are above the
   fold at 1440×900.

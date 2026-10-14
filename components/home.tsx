@@ -22,8 +22,8 @@ const copy = {
  en: {
   skip:"Skip to content", navLabel:"Main navigation", menuLabel:"Toggle navigation", homeLabel:"Cronoverse home",
   nav:{services:"Services", examples:"Examples", why:"Why us", process:"Process", contact:"Let's talk"},
-  studio:"WEB DEVELOPMENT & BUSINESS SOFTWARE · SOUTHERN CALIFORNIA", title:["Better websites.","Smarter business."],
-  intro:"We build fast, modern websites and custom software that help businesses attract customers, simplify operations, and grow.",
+  studio:"WEB DEVELOPMENT & BUSINESS SOFTWARE · SOUTHERN CALIFORNIA", title:["Your competition is upgrading right\u00a0now.","Are you?"],
+  intro:"Customers compare you in seconds, and an outdated site sends them to whoever looks sharper. We build fast, modern websites and custom software that make you the obvious choice.",
   cta:"Start Your Project", explore:"See What We Build", serviceLineLabel:"What we build", serviceLine:["Custom websites","Business applications","Automation","Integrations"],
   photo:"THE GOLDEN STATE. A FRESH PERSPECTIVE.", heroAlt:"Surreal illustrated California palm trees with electric-blue edges and digital fragments above a coral sunset",
   band:"Serving Orange County and businesses throughout Southern California.", bandLang:"English & Español",
@@ -80,8 +80,8 @@ const copy = {
  es: {
   skip:"Ir al contenido", navLabel:"Navegación principal", menuLabel:"Abrir navegación", homeLabel:"Inicio de Cronoverse",
   nav:{services:"Servicios", examples:"Ejemplos", why:"Por qué nosotros", process:"Proceso", contact:"Hablemos"},
-  studio:"DESARROLLO WEB Y SOFTWARE EMPRESARIAL · SUR DE CALIFORNIA", title:["Mejores sitios web.","Negocios más eficientes."],
-  intro:"Creamos sitios web modernos y software a medida para ayudarte a atraer clientes, simplificar tus operaciones y hacer crecer tu negocio.",
+  studio:"DESARROLLO WEB Y SOFTWARE EMPRESARIAL · SUR DE CALIFORNIA", title:["Tu competencia ya se está modernizando.","¿Y tú?"],
+  intro:"Tus clientes te comparan en segundos, y un sitio anticuado los manda con quien se ve mejor. Creamos sitios web rápidos y software a medida para que tú seas la opción obvia.",
   cta:"Cuéntanos tu proyecto", explore:"Explora nuestros servicios", serviceLineLabel:"Lo que creamos", serviceLine:["Sitios web","Aplicaciones empresariales","Automatización","Integraciones"],
   photo:"CALIFORNIA. UNA NUEVA PERSPECTIVA.", heroAlt:"Ilustración surrealista de palmeras californianas con bordes azul eléctrico y fragmentos digitales sobre un atardecer coral",
   band:"Atendemos a negocios de Orange County y todo el sur de California.", bandLang:"English & Español",
