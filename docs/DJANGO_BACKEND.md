@@ -67,6 +67,7 @@ Configure these in the backend environment before sending real mail:
 | `EMAIL_USE_TLS`, `EMAIL_USE_SSL` | `1`, `0` for STARTTLS on port 587 |
 | `DEFAULT_FROM_EMAIL` | `Cronoverse Web Studio <info@cronoverse.online>` for both outgoing messages |
 | `INQUIRY_NOTIFICATION_EMAIL` | `lh@cronoverse.online` for new-inquiry alerts |
+| `INQUIRY_NOTIFICATION_CC` | Optional, comma-separated: extra mailboxes copied (Cc) on each new-inquiry alert. The visitor's welcome email is never copied |
 | `INQUIRY_REPLY_TO_EMAIL` | `info@cronoverse.online` for replies to the welcome message |
 | `STUDIO_URL` | Public frontend origin used in welcome emails |
 | `DJANGO_PUBLIC_BASE_URL` | Public HTTPS backend origin used in the owner email's admin link |

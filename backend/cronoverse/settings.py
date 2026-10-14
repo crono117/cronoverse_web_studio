@@ -30,6 +30,8 @@ INQUIRY_MAX_PER_HOUR = 3
 PUBLIC_BASE_URL = os.getenv("DJANGO_PUBLIC_BASE_URL", "http://127.0.0.1:8000" if DEBUG else "").rstrip("/")
 STUDIO_URL = os.getenv("STUDIO_URL", "https://cronoverse.online").rstrip("/")
 INQUIRY_NOTIFICATION_EMAIL = os.getenv("INQUIRY_NOTIFICATION_EMAIL", "").strip()
+# Optional extra mailboxes copied on every new-inquiry notification (comma-separated).
+INQUIRY_NOTIFICATION_CC = csv("INQUIRY_NOTIFICATION_CC")
 GA4_PROPERTY_ID = os.getenv("GA4_PROPERTY_ID", "").strip()
 GA4_CREDENTIALS_FILE = os.getenv("GOOGLE_APPLICATION_CREDENTIALS", "").strip()
 
@@ -53,6 +55,8 @@ if EMAIL_USE_TLS and EMAIL_USE_SSL:
     raise ImproperlyConfigured("Choose EMAIL_USE_TLS or EMAIL_USE_SSL, not both.")
 if INQUIRY_NOTIFICATION_EMAIL:
     validate_email(INQUIRY_NOTIFICATION_EMAIL)
+for address in INQUIRY_NOTIFICATION_CC:
+    validate_email(address)
 if INQUIRY_REPLY_TO_EMAIL:
     validate_email(INQUIRY_REPLY_TO_EMAIL)
 if DEFAULT_FROM_EMAIL:

@@ -53,10 +53,12 @@ def build_message(delivery):
         if inquiry.language == "es":
             subject = "Bienvenido a Cronoverse — recibimos tu consulta"
         reply_to = [settings.INQUIRY_REPLY_TO_EMAIL] if settings.INQUIRY_REPLY_TO_EMAIL else []
+        cc = []
     else:
         template = "inquiries/email/notification"
         subject = "New Cronoverse project inquiry"
         reply_to = [inquiry.email]
+        cc = [address for address in settings.INQUIRY_NOTIFICATION_CC if address != delivery.recipient]
     recipient = delivery.recipient
     if not recipient and delivery.kind == EmailDelivery.Kind.NOTIFICATION:
         recipient = settings.INQUIRY_NOTIFICATION_EMAIL
@@ -69,6 +71,7 @@ def build_message(delivery):
         body=render_to_string(template + ".txt", context),
         from_email=settings.DEFAULT_FROM_EMAIL,
         to=[recipient],
+        cc=cc,
         reply_to=reply_to,
         headers={"Message-ID": f"<cronoverse-{delivery.pk}@{sender_domain}>"},
     )

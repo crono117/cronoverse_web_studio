@@ -86,6 +86,17 @@ class InquiryFlowTests(TransactionTestCase):
         self.assertTrue(all(message.alternatives[0].mimetype == "text/html" for message in mail.outbox))
         self.assertEqual(EmailDelivery.objects.filter(state=EmailDelivery.State.SENT).count(), 2)
 
+    @override_settings(INQUIRY_NOTIFICATION_CC=["owner.backup@example.com"])
+    def test_notification_is_copied_to_extra_mailboxes_but_welcome_is_not(self):
+        self.submit(payload())
+        self.drain()
+        self.assertEqual(len(mail.outbox), 2)
+        welcome = next(message for message in mail.outbox if message.to == ["alex@example.com"])
+        alert = next(message for message in mail.outbox if message.to == ["lh@cronoverse.online"])
+        self.assertEqual(alert.cc, ["owner.backup@example.com"])
+        self.assertEqual(welcome.cc, [])
+        self.assertEqual(alert.recipients(), ["lh@cronoverse.online", "owner.backup@example.com"])
+
     def test_spanish_visitor_gets_spanish_welcome(self):
         self.submit(payload(language="es", name="Lucía"))
         self.drain()
